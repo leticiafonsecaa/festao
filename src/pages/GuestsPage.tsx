@@ -31,8 +31,6 @@ export default function GuestsPage() {
   const [filterRsvp, setFilterRsvp] = useState<'all' | Guest['rsvp']>('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
-  const [showBulkAdd, setShowBulkAdd] = useState(false);
-  const [bulkText, setBulkText] = useState('');
 
   // Form state
   const [formName, setFormName] = useState('');
@@ -126,21 +124,6 @@ export default function GuestsPage() {
     setShowAddModal(true);
   };
 
-  const handleBulkAdd = () => {
-    const names = bulkText.split('\n').map(n => n.trim()).filter(n => n.length > 0);
-    names.forEach(name => {
-      addGuest(event.id, {
-        name,
-        email: '',
-        phone: '',
-        rsvp: 'pending',
-        plusOne: false,
-      });
-    });
-    setBulkText('');
-    setShowBulkAdd(false);
-  };
-
   const rsvpColors = {
     confirmed: 'bg-sage/10 text-sage',
     pending: 'bg-charcoal/5 text-charcoal-light',
@@ -177,13 +160,6 @@ export default function GuestsPage() {
               <p className="text-charcoal-light">{event.name}</p>
             </div>
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => { resetForm(); setShowBulkAdd(true); }}
-                className="btn-secondary flex items-center justify-center gap-2 text-xs"
-              >
-                <UserPlus className="w-4 h-4" />
-                Adicionar em lote
-              </button>
               <button
                 onClick={() => { resetForm(); setEditingGuest(null); setShowAddModal(true); }}
                 className="btn-primary flex items-center justify-center gap-2 text-xs"
@@ -498,64 +474,6 @@ export default function GuestsPage() {
           )}
         </AnimatePresence>
 
-        {/* Bulk Add Modal */}
-        <AnimatePresence>
-          {showBulkAdd && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal/40 backdrop-blur-sm"
-              onClick={() => setShowBulkAdd(false)}
-            >
-              <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.95, opacity: 0 }}
-                className="bg-white rounded-3xl p-5 sm:p-8 w-full max-w-md shadow-card-hover max-h-[90vh] overflow-y-auto"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="font-display text-xl font-semibold">Adicionar em lote</h2>
-                  <button
-                    onClick={() => setShowBulkAdd(false)}
-                    className="p-1.5 rounded-lg hover:bg-cream transition-colors"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-
-                <p className="text-sm text-charcoal-light mb-4">
-                  Digite um nome por linha para adicionar vários convidados de uma vez.
-                </p>
-
-                <textarea
-                  value={bulkText}
-                  onChange={(e) => setBulkText(e.target.value)}
-                  placeholder={"Maria Silva\nJoão Santos\nAna Oliveira\n..."}
-                  rows={8}
-                  className="w-full bg-cream rounded-xl px-4 py-3 text-sm outline-none
-                             focus:ring-2 focus:ring-blush/30 transition-shadow resize-none font-mono"
-                />
-
-                <div className="flex gap-3 mt-6">
-                  <button
-                    onClick={() => setShowBulkAdd(false)}
-                    className="flex-1 btn-secondary text-xs"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    onClick={handleBulkAdd}
-                    className="flex-1 btn-primary text-xs"
-                  >
-                    Adicionar {bulkText.split('\n').filter(n => n.trim()).length || ''} convidados
-                  </button>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </main>
   );
