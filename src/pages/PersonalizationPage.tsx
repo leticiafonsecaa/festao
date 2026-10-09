@@ -8,6 +8,7 @@ import {
   Globe, ExternalLink, Copy, Image as ImageIcon, Info
 } from 'lucide-react';
 import { copyText, slugify, safeHex, getCountdown, compressImage } from '../lib/eventUtils';
+import ImageCropper from '../components/ImageCropper';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -44,6 +45,7 @@ export default function PersonalizationPage() {
   const [heroError, setHeroError] = useState('');
   const [heroUploading, setHeroUploading] = useState(false);
   const [heroFailed, setHeroFailed] = useState(false);
+  const [cropFile, setCropFile] = useState<File | null>(null);
   const [now, setNow] = useState(() => new Date());
 
   // Sincroniza os rascunhos quando a store muda (presets, seletor de cor, upload/remover capa).
@@ -125,13 +127,24 @@ export default function PersonalizationPage() {
     updatePersonalization(event.id, { heroImage: url.startsWith('http') ? url : '' });
   };
 
-  const handleHeroFile = async (file: File | null | undefined) => {
+  // Ao escolher uma imagem, abre o recorte antes de salvar.
+  const handleHeroFile = (file: File | null | undefined) => {
     if (!file) return;
     setHeroError('');
+    if (!file.type.startsWith('image/')) {
+      setHeroError('O arquivo selecionado não é uma imagem.');
+      return;
+    }
+    setCropFile(file);
+  };
+
+  const handleCropConfirm = async (cropped: File) => {
+    setCropFile(null);
     setHeroUploading(true);
     try {
-      const dataUrl = await compressImage(file);
+      const dataUrl = await compressImage(cropped);
       updatePersonalization(event.id, { heroImage: dataUrl });
+      setHeroFailed(false);
     } catch (err) {
       setHeroError(err instanceof Error ? err.message : 'Não foi possível enviar a imagem.');
     } finally {
@@ -620,6 +633,14 @@ export default function PersonalizationPage() {
           </div>
         </div>
       </div>
+      {cropFile && (
+        <ImageCropper
+          file={cropFile}
+          aspect={16 / 9}
+          onCancel={() => setCropFile(null)}
+          onConfirm={handleCropConfirm}
+        />
+      )}
     </main>
   );
 }
