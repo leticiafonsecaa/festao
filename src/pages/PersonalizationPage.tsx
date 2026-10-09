@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useStore } from '../store/useStore';
 import {
   ChevronRight, Palette, Type, Eye,
-  CheckCircle2, Heart, Users, Gift, Clock,
+  CheckCircle2, Heart, Gift, Clock,
   Globe, ExternalLink, Copy, Image as ImageIcon, Info
 } from 'lucide-react';
 import { copyText, slugify, safeHex, getCountdown, compressImage } from '../lib/eventUtils';
@@ -462,7 +462,6 @@ export default function PersonalizationPage() {
                 <div className="space-y-3">
                   {[
                     { key: 'showCountdown' as const, label: 'Countdown', desc: 'Mostrar contagem regressiva', icon: Clock },
-                    { key: 'showGuestCount' as const, label: 'Número de convidados', desc: 'Mostrar total de convidados', icon: Users },
                     { key: 'showGiftList' as const, label: 'Lista de presentes', desc: 'Mostrar lista de presentes', icon: Gift },
                     { key: 'showRsvp' as const, label: 'Confirmação de presença', desc: 'Permitir RSVP na página', icon: Heart },
                   ].map((item) => (
@@ -614,11 +613,6 @@ export default function PersonalizationPage() {
                       {p.showGiftList && (
                         <span className="text-[10px] bg-white px-2 py-1 rounded-full text-charcoal-light flex items-center gap-1">
                           <Gift className="w-2.5 h-2.5" /> Presentes
-                        </span>
-                      )}
-                      {p.showGuestCount && (
-                        <span className="text-[10px] bg-white px-2 py-1 rounded-full text-charcoal-light flex items-center gap-1">
-                          <Users className="w-2.5 h-2.5" /> {event.guests.length || 0}
                         </span>
                       )}
                     </div>

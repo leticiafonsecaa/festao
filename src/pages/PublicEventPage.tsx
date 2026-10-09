@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, MapPin, Map, ExternalLink, Gift, Users, Heart } from 'lucide-react';
+import { Calendar, Clock, MapPin, Map, ExternalLink, Gift, Heart } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import type { Guest } from '../store/useStore';
 import { eventTypeMeta, safeHex, getCountdown, formatBRL, normalizeName } from '../lib/eventUtils';
+import { averageImageColor, pickTextColor, HERO_TEXT_DARK, HERO_TEXT_LIGHT } from '../lib/heroContrast';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -24,7 +25,24 @@ export default function PublicEventPage() {
   const updateGuest = useStore((s) => s.updateGuest);
   const event = events.find((e) => e.slug === slug && e.published);
   const [heroFailed, setHeroFailed] = useState(false);
+  const [coverAverage, setCoverAverage] = useState<string | null>(null);
   const [now, setNow] = useState(() => new Date());
+  const coverSrc = event?.personalization.heroImage ?? '';
+
+  // Cor média da capa importada: define se o texto do topo fica claro ou escuro.
+  useEffect(() => {
+    let cancelled = false;
+    if (!coverSrc || heroFailed) {
+      setCoverAverage(null);
+      return;
+    }
+    averageImageColor(coverSrc).then((color) => {
+      if (!cancelled) setCoverAverage(color);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [coverSrc, heroFailed]);
 
   // RSVP form (hooks always run, before any early return)
   const [rsvpChoice, setRsvpChoice] = useState<'confirmed' | 'declined' | ''>('');
@@ -105,8 +123,21 @@ export default function PublicEventPage() {
   const p = event.personalization;
   const primaryHex = safeHex(p.primaryColor, '#D4A89C');
   const secondaryHex = safeHex(p.secondaryColor, '#C47D6B');
+  // A capa é mostrada sem nenhuma cor por cima. O texto do topo só muda quando há capa.
+  const hasCover = Boolean(p.heroImage) && !heroFailed;
+  // Se a capa não puder ser analisada, usa texto claro com sombra (a maioria das fotos é escura).
+  const heroTextColor = !hasCover
+    ? HERO_TEXT_DARK
+    : coverAverage
+      ? pickTextColor(coverAverage)
+      : HERO_TEXT_LIGHT;
+  const heroTextStyle = hasCover
+    ? {
+        color: heroTextColor,
+        textShadow: heroTextColor === HERO_TEXT_LIGHT ? '0 1px 3px rgba(0,0,0,0.45)' : undefined,
+      }
+    : undefined;
   const countdown = getCountdown(event.date, event.time, now);
-  const confirmedCount = event.guests.filter((g) => g.rsvp === 'confirmed').length;
   const mapQuery = encodeURIComponent(`${event.venue} ${event.city}`.trim());
 
   return (
@@ -126,20 +157,25 @@ export default function PublicEventPage() {
                   onError={() => setHeroFailed(true)}
                   className="absolute inset-0 w-full h-full object-cover"
                 />
-                <div className="absolute inset-0" style={{ backgroundColor: primaryHex + '66' }} />
               </>
             )}
             <div className="relative px-6 py-10 text-center">
               <span className="text-4xl block mb-3">{meta.emoji}</span>
-              <p className="text-xs uppercase tracking-widest mb-3" style={{ color: secondaryHex }}>
+              <p
+                className="text-xs uppercase tracking-widest mb-3"
+                style={hasCover ? heroTextStyle : { color: secondaryHex }}
+              >
                 {meta.label}
               </p>
-              <p className="text-sm text-charcoal-light mb-1">{event.hosts}</p>
-              <h1 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight mb-3">
+              <p className={`text-sm mb-1 ${hasCover ? '' : 'text-charcoal-light'}`} style={heroTextStyle}>{event.hosts}</p>
+              <h1
+                className="font-display text-3xl sm:text-4xl font-semibold tracking-tight mb-3"
+                style={heroTextStyle}
+              >
                 {event.name || 'Evento sem nome'}
               </h1>
               {p.tagline && (
-                <p className="text-sm italic text-charcoal-light">"{p.tagline}"</p>
+                <p className={`text-sm italic ${hasCover ? '' : 'text-charcoal-light'}`} style={heroTextStyle}>"{p.tagline}"</p>
               )}
             </div>
           </div>
@@ -397,23 +433,6 @@ export default function PublicEventPage() {
                   </button>
                 </form>
               )}
-            </div>
-          </motion.div>
-        )}
-
-        {/* Contagem de convidados */}
-        {p.showGuestCount && (
-          <motion.div custom={5} variants={fadeUp} initial="hidden" animate="visible">
-            <div className="card-base flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: primaryHex + '25' }}
-              >
-                <Users className="w-5 h-5" style={{ color: secondaryHex }} />
-              </div>
-              <p className="text-sm text-charcoal-light">
-                {event.guests.length} convidados · {confirmedCount} confirmados
-              </p>
             </div>
           </motion.div>
         )}
