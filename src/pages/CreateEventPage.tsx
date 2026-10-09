@@ -19,6 +19,14 @@ const eventTypes = [
 
 const steps = ['Tipo', 'Detalhes', 'Descrição', 'Confirmar'];
 
+const namePlaceholders: Record<string, string> = {
+  casamento: 'Ex: Casamento de Ana & Lucas',
+  '15 anos': 'Ex: Festa de 15 anos da Júlia',
+  aniversario: 'Ex: Aniversário de 30 anos do João',
+  corporativo: 'Ex: Confraternização de fim de ano da equipe',
+  outro: 'Ex: Chá de bebê da Marina',
+};
+
 export default function CreateEventPage() {
   const navigate = useNavigate();
   const createEvent = useStore((s) => s.createEvent);
@@ -184,7 +192,7 @@ export default function CreateEventPage() {
                   type="text"
                   value={formData.name}
                   onChange={(e) => updateField('name', e.target.value)}
-                  placeholder="Ex: Casamento de Ana & Lucas"
+                  placeholder={namePlaceholders[formData.type] ?? 'Ex: Nome do seu evento'}
                   className="w-full bg-white rounded-xl px-4 py-3 text-sm border border-charcoal/10
                              outline-none focus:ring-2 focus:ring-blush/30 transition-shadow"
                 />
