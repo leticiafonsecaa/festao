@@ -3,6 +3,36 @@
 Guia manual das etapas que dependem de você (conta, painel e variáveis).
 Nada aqui é executado automaticamente pelo app.
 
+## Status da implementação (atualização: Fases 0–3)
+
+### Concluído em código (branch `feat/supabase-fase-1-infra`)
+
+| Fase | Entrega | Commits |
+|---|---|---|
+| 0 | `.gitignore` protege `.env*`; `.env.example` documenta as variáveis públicas | `bf2758b` |
+| 1 | Migrations `0001`–`0003` (schema, RLS, função `submit_rsvp`); cliente `src/lib/supabase.ts`; dependência `@supabase/supabase-js` | `bf2758b` |
+| 2 | Telas `/entrar`, `/cadastro` (com confirmação de e-mail), `/esqueci-senha`, `/redefinir-senha`; `RequireAuth` nas rotas privadas; menu de usuário na Navbar; este guia | `8db0a6d` |
+| 3 | Camada de API (`src/lib/api/`); store com modo duplo Supabase/demo (localStorage preservado sem env vars); hidratação por sessão com limpeza no logout; debounce de 400ms em edições de digitação; RSVP da página pública via RPC `submit_rsvp`; página pública carrega evento por slug no modo remoto | `337cce5` |
+
+### Testado de fato (executado no ambiente)
+
+- `npm run typecheck`: **0 erros** (após cada fase).
+- `npm run build`: **OK** (após cada fase).
+- Leitura/inspeção dos fluxos de código (nenhuma tela executada em navegador com banco real).
+
+### NÃO testado ainda (depende do projeto Supabase real)
+
+- Aplicação das migrations num banco real e validação das policies RLS.
+- Checklist da seção 3 (confirmação de e-mail) e checklist da seção 7 (dados).
+- Teste de RSVP entre dois dispositivos/rede anônima.
+
+### Pendências conhecidas (não bloqueiam o deploy de preview)
+
+- **Capas como data URL**: o upload de capa ainda grava data URL (funciona, mas é pesado). Migração para Supabase Storage = **Fase 6** (aguardando avaliação).
+- Testes automatizados (Vitest + CI) = Fase 7.
+- Deploy de produção e smoke test = Fase 8 (ver `deploy-vercel.md`).
+- Aviso de bundle >500 kB no build (framer-motion + supabase-js + zod); otimização com code-split futura.
+
 ## 1. Criar o projeto
 
 1. Acesse <https://supabase.com> → New project (região recomendada: `sa-east-1`).
@@ -82,3 +112,55 @@ Executar em desenvolvimento (`npm run dev` com `.env.local` preenchido):
 
 Critério de aceitação da Fase 2: todos os itens acima marcados, com
 `npm run typecheck` e `npm run build` verdes.
+
+## 7. Checklist de testes da Fase 3 — camada de dados (Supabase)
+
+Pré-condições: migrations aplicadas (seção 2), Auth configurado (seção 3),
+`.env.local` preenchido, `npm run dev` rodando. Execute **dois navegadores**
+(A = dono logado; B = anônimo/outra conta) para validar isolamento.
+
+### Dados do dono (isolamento entre usuários)
+
+- [ ] Criar evento no navegador A → fazer logout → login → evento aparece.
+- [ ] Abrir o mesmo login no navegador C (outro dispositivo/máquina) →
+      eventos, convidados e presentes aparecem (multi-dispositivo).
+- [ ] Editar nome/data/hora/local no Dashboard/Personalização (digitação
+      rápida) → recarregar após ~2s → alterações persistidas (debounce OK).
+- [ ] Criar conta em outro e-mail (navegador B) → **não vê** os eventos de A
+      (RLS); digitar o id de um evento de A em `/dashboard/<id>` → "Nenhum
+      evento selecionado" (acesso negado).
+- [ ] CRUD de convidados: adicionar, editar, mudar RSVP no select, remover →
+      persiste após recarregar; filtro por RSVP continua correto.
+- [ ] CRUD de presentes: adicionar com opções de loja/preço BRL, editar,
+      marcar recebido/remover → persiste; totais corretos.
+- [ ] Personalização: cores, tagline, toggles e capa (data URL, por enquanto)
+      → persistem; preview reflete o banco.
+- [ ] Excluir evento → some da lista e a URL direta não abre mais.
+
+### Publicação e página pública
+
+- [ ] Publicar página → link `/e/<slug>` abre no navegador B (anônimo) com
+      dados reais do banco (capa, countdown, presentes).
+- [ ] Despublicar → B vê "página não encontrada"; publicar de novo → o
+      **mesmo link** volta a funcionar.
+- [ ] RSVP anônimo em B com nome **não cadastrado** → cria convidado novo;
+      aparece no painel de A com selo "via página".
+- [ ] RSVP em B com nome **já cadastrado** (ex.: "maria silva" vs "Maria
+      Silva") → atualiza o mesmo convidado, sem duplicar.
+- [ ] A página pública **não** lista nomes/e-mails de convidados (só
+      presentes e contagens).
+- [ ] Enviar RSVP 11 vezes do mesmo navegador em curto período → mensagem
+      de "Muitas tentativas" (rate limit).
+- [ ] Logout no navegador A → eventos somem do painel (cache limpo em
+      navegador compartilhado).
+
+### Regressão do modo demo (sem env vars)
+
+- [ ] Renomear `.env.local` (ou esvaziar as `VITE_*`) → `npm run dev` →
+      todo o fluxo antigo de localStorage funciona como antes (criar evento,
+      publicar, RSVP na mesma origem, sync entre abas).
+
+Critério de aceitação da Fase 3: todos os itens acima marcados, com
+`npm run typecheck` e `npm run build` verdes e nenhum erro de console
+relacionado a rede/RLS durante os testes.
+
