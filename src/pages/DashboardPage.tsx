@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useStore } from '../store/useStore';
 import {
   Users, Gift, Palette, CheckSquare, Calendar, Clock,
-  ChevronRight, MapPin, TrendingUp, Star, Plus, Sparkles,
+  ChevronRight, MapPin, TrendingUp, Star, Plus,
   Globe, Copy, ExternalLink
 } from 'lucide-react';
 import { getCountdown, timeAgo, copyText } from '../lib/eventUtils';
@@ -36,7 +36,7 @@ export default function DashboardPage() {
     return (
       <main className="pt-24 pb-16 min-h-screen">
         <div className="max-w-7xl mx-auto section-padding text-center py-20">
-          <Sparkles className="w-16 h-16 text-charcoal-light/20 mx-auto mb-4" />
+          <img src="/branding/icone-light.svg" alt="" className="w-16 h-16 mx-auto mb-4" />
           {events.length > 0 ? (
             <>
               <h1 className="font-display text-3xl font-semibold mb-2">Seus eventos</h1>
@@ -46,7 +46,7 @@ export default function DashboardPage() {
             </>
           ) : (
             <>
-              <h1 className="font-display text-3xl font-semibold mb-2">Bem-vindo ao Festão!</h1>
+              <h1 className="font-display text-3xl font-semibold mb-2">Bem-vindo ao Festivity!</h1>
               <p className="text-charcoal-light mb-6 max-w-md mx-auto">
                 Você ainda não criou nenhum evento. Comece agora e organize tudo em um só lugar.
               </p>

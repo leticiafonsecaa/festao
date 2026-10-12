@@ -1,4 +1,4 @@
-// Agente temporario de demonstracao do Festao.
+// Agente temporario de demonstracao do Festivity.
 // Nao usa IA nem chave de API: procura palavras-chave na pergunta e
 // responde com um texto pronto. Funciona offline, o que ajuda na feira.
 // Para remover depois: apague este arquivo, AgentePage.tsx e a rota /agente.
@@ -10,9 +10,9 @@ interface Tema {
 
 const temas: Tema[] = [
   {
-    palavras: ['sobre', 'festao', 'o que e', 'para que serve', 'finalidade', 'objetivo', 'apresent'],
+    palavras: ['sobre', 'festao', 'festivity', 'o que e', 'para que serve', 'finalidade', 'objetivo', 'apresent'],
     resposta:
-      'O Festão é uma plataforma para organizar eventos do começo ao fim: casamentos, aniversários, 15 anos, confraternizações e outros. Você reúne convidados, presentes, orçamento e fornecedores em um só lugar.',
+      'O Festivity é uma plataforma para organizar eventos do começo ao fim: casamentos, aniversários, 15 anos, confraternizações e outros. Você reúne convidados, presentes, orçamento e fornecedores em um só lugar.',
   },
   {
     palavras: ['criar', 'cadastrar evento', 'novo evento', 'comecar', 'montar evento'],
@@ -22,7 +22,7 @@ const temas: Tema[] = [
   {
     palavras: ['tipo', 'tipos', 'casamento', 'aniversario', '15 anos', 'formatura', 'cha de bebe', 'batizado', 'corporativo', 'confraternizacao'],
     resposta:
-      'O Festão atende vários tipos de evento: casamento, 15 anos, aniversário, formatura, chá de bebê, chá de panela, batizado, corporativo e outros. Cada tipo mostra só as ferramentas que fazem sentido para ele.',
+      'O Festivity atende vários tipos de evento: casamento, 15 anos, aniversário, formatura, chá de bebê, chá de panela, batizado, corporativo e outros. Cada tipo mostra só as ferramentas que fazem sentido para ele.',
   },
   {
     palavras: ['convidado', 'convidados', 'convite', 'rsvp', 'confirmar presenca', 'presenca', 'lista de convidados'],
@@ -57,7 +57,7 @@ const temas: Tema[] = [
   {
     palavras: ['tecnologia', 'tecnologias', 'react', 'banco', 'backend', 'programacao', 'como foi feito', 'feito com', 'codigo', 'typescript'],
     resposta:
-      'O Festão é feito com React e TypeScript no site, e Node.js com Express no servidor. Os dados ficam em um banco SQLite, controlado pelo Prisma. Tudo roda em um notebook, sem precisar de internet.',
+      'O Festivity é feito com React e TypeScript no site, e Node.js com Express no servidor. Os dados ficam em um banco SQLite, controlado pelo Prisma. Tudo roda em um notebook, sem precisar de internet.',
   },
   {
     palavras: ['demo', 'demonstracao', 'testar', 'como usar', 'como funciona', 'tutorial', 'passo a passo'],
@@ -67,12 +67,12 @@ const temas: Tema[] = [
   {
     palavras: ['oi', 'ola', 'bom dia', 'boa tarde', 'boa noite', 'tudo bem', 'eae', 'e ai'],
     resposta:
-      'Olá! Sou o assistente de demonstração do Festão. Posso explicar o que é a plataforma, os tipos de evento, convidados, presentes, orçamento e serviços. O que você quer saber?',
+      'Olá! Sou o assistente de demonstração do Festivity. Posso explicar o que é a plataforma, os tipos de evento, convidados, presentes, orçamento e serviços. O que você quer saber?',
   },
 ];
 
 const RESPOSTA_PADRAO =
-  'Não entendi bem a pergunta. Posso falar sobre: o que é o Festão, como criar um evento, tipos de evento, convidados, lista de presentes, orçamento, serviços e fornecedores, cadastro e tecnologia usada.';
+  'Não entendi bem a pergunta. Posso falar sobre: o que é o Festivity, como criar um evento, tipos de evento, convidados, lista de presentes, orçamento, serviços e fornecedores, cadastro e tecnologia usada.';
 
 function normalizar(texto: string): string {
   return texto
@@ -109,7 +109,7 @@ export function responder(pergunta: string): string {
 }
 
 export const sugestoes = [
-  'O que é o Festão?',
+  'O que é o Festivity?',
   'Como criar um evento?',
   'Quais tipos de evento existem?',
   'Como funciona a lista de presentes?',

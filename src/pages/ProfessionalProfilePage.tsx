@@ -68,7 +68,7 @@ const defaultProfessional = {
   location: 'Brasil',
   rating: 4.8,
   reviews: 100,
-  description: 'Profissional verificado no Festão.',
+  description: 'Profissional verificado no Festivity.',
   price: 'Sob consulta',
   image: '⭐',
   bio: 'Profissional dedicado e experiente, pronto para transformar seu evento em algo especial. Com anos de experiência no mercado, oferecemos qualidade, compromisso e satisfação garantida.',

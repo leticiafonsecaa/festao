@@ -9,7 +9,7 @@ export default function AIAssistant() {
   const [messages, setMessages] = useState<Array<{ role: 'user' | 'ai'; text: string }>>([
     {
       role: 'ai',
-      text: 'Olá! 👋 Sou a assistente do Festão. Posso ajudar com ideias para seu evento, sugestões de presentes, checklists e muito mais. Como posso ajudar?'
+      text: 'Olá! 👋 Sou a assistente do Festivity. Posso ajudar com ideias para seu evento, sugestões de presentes, checklists e muito mais. Como posso ajudar?'
     }
   ]);
 
@@ -61,10 +61,10 @@ export default function AIAssistant() {
             <div className="bg-charcoal text-ivory p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 bg-blush/20 rounded-xl flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-blush" />
+                  <img src="/branding/icone-dark.svg" alt="" className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold">Assistente Festão</p>
+                  <p className="text-sm font-semibold">Assistente Festivity</p>
                   <p className="text-xs text-ivory/50">Online agora</p>
                 </div>
               </div>

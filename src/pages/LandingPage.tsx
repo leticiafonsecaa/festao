@@ -482,11 +482,17 @@ export default function LandingPage() {
               viewport={viewport}
               variants={stagger}
             >
+              <motion.img
+                variants={fadeUp}
+                src="/branding/icone-com-texto-dark.svg"
+                alt="Festivity"
+                className="mx-auto mb-6 h-10 w-auto"
+              />
               <motion.h2 variants={fadeUp} className="font-display text-4xl md:text-5xl font-semibold mb-4">
                 Pronto para começar?
               </motion.h2>
               <motion.p variants={fadeUp} className="text-ivory/70 max-w-xl mx-auto mb-10">
-                Crie seu evento agora e veja como é fácil organizar tudo com o Festão.
+                Crie seu evento agora e veja como é fácil organizar tudo com o Festivity.
               </motion.p>
               <motion.div variants={fadeUp} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} className="inline-block">
                 <Link

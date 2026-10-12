@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Sparkles, LogOut, User as UserIcon } from 'lucide-react';
+import { Menu, X, LogOut, User as UserIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../store/useAuth';
 
@@ -31,12 +31,11 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-9 h-9 bg-charcoal rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-              <Sparkles className="w-5 h-5 text-blush" />
-            </div>
-            <span className="font-display text-xl font-semibold tracking-tight">
-              Festão
-            </span>
+            <img
+              src="/branding/icone-com-texto-light.svg"
+              alt="Festivity"
+              className="h-9 w-auto group-hover:scale-105 transition-transform duration-300"
+            />
           </Link>
 
           {/* Desktop Nav */}

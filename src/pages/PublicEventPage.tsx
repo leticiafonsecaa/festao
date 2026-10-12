@@ -502,7 +502,7 @@ export default function PublicEventPage() {
           <p className="text-xs text-charcoal-light">
             Criado com{' '}
             <Link to="/" className="font-semibold hover:underline" style={{ color: secondaryHex }}>
-              Festão
+              Festivity
             </Link>
           </p>
         </motion.div>

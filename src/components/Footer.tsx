@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Sparkles, Instagram, Heart } from 'lucide-react';
+import { Instagram, Heart } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -9,12 +9,11 @@ export default function Footer() {
           {/* Brand */}
           <div className="md:col-span-1">
             <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="w-9 h-9 bg-ivory rounded-xl flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-charcoal" />
-              </div>
-              <span className="font-display text-xl font-semibold text-ivory">
-                Festão
-              </span>
+              <img
+                src="/branding/icone-com-texto-dark.svg"
+                alt="Festivity"
+                className="h-9 w-auto"
+              />
             </Link>
             <p className="text-sm leading-relaxed text-ivory/50 max-w-xs">
               Tudo para o seu evento, em um só lugar. Organize, personalize e 
@@ -54,8 +53,8 @@ export default function Footer() {
               Contato
             </h4>
             <ul className="space-y-2.5">
-              <li><a href="mailto:oi@festsao.com.br" className="text-sm hover:text-blush transition-colors">oi@festsao.com.br</a></li>
-              <li><span className="text-sm flex items-center gap-2"><Instagram className="w-4 h-4" /> @festsao</span></li>
+              <li><a href="mailto:oi@festivity.com.br" className="text-sm hover:text-blush transition-colors">oi@festivity.com.br</a></li>
+              <li><span className="text-sm flex items-center gap-2"><Instagram className="w-4 h-4" /> @festivity</span></li>
             </ul>
           </div>
         </div>
@@ -63,7 +62,7 @@ export default function Footer() {
         {/* Bottom */}
         <div className="mt-16 pt-8 border-t border-ivory/10 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-ivory/40">
-            © 2026 Festão. Todos os direitos reservados.
+            © 2026 Festivity. Todos os direitos reservados.
           </p>
           <p className="text-xs text-ivory/40 flex items-center gap-1">
             Feito com <Heart className="w-3 h-3 text-blush fill-blush" /> para momentos especiais

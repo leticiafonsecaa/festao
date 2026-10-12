@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Send, Sparkles, ChevronLeft } from 'lucide-react';
+import { Send, ChevronLeft } from 'lucide-react';
 import { responder, sugestoes } from '../lib/agente';
 
 interface Mensagem {
@@ -10,7 +10,7 @@ interface Mensagem {
 
 const abertura: Mensagem = {
   autor: 'agente',
-  texto: 'Olá! Sou o assistente de demonstração do Festão. Pergunte o que quiser sobre a plataforma.',
+  texto: 'Olá! Sou o assistente de demonstração do Festivity. Pergunte o que quiser sobre a plataforma.',
 };
 
 export default function AgentePage() {
@@ -39,10 +39,10 @@ export default function AgentePage() {
         <div className="bg-white rounded-3xl border border-charcoal/5 shadow-card overflow-hidden">
           <div className="bg-charcoal text-ivory p-4 flex items-center gap-3">
             <div className="w-9 h-9 bg-blush/20 rounded-xl flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-blush" />
+              <img src="/branding/icone-dark.svg" alt="" className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-sm font-semibold">Assistente Festão</p>
+              <p className="text-sm font-semibold">Assistente Festivity</p>
               <p className="text-xs text-ivory/60">Demonstração</p>
             </div>
           </div>
