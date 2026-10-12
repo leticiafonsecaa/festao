@@ -1,17 +1,29 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Sparkles } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Menu, X, Sparkles, LogOut, User as UserIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../store/useAuth';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { session, initialized, signOut } = useAuth();
 
   const navLinks = [
     { path: '/', label: 'Início' },
     { path: '/dashboard', label: 'Dashboard' },
     { path: '/servicos', label: 'Serviços' },
   ];
+
+  const handleSignOut = async () => {
+    setIsOpen(false);
+    await signOut();
+    navigate('/', { replace: true });
+  };
+
+  const emailLabel = session?.user?.email ?? '';
+  const shortEmail = emailLabel.length > 22 ? `${emailLabel.slice(0, 20)}…` : emailLabel;
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-cream/80 backdrop-blur-xl border-b border-charcoal/5">
@@ -44,11 +56,45 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* CTA */}
+          {/* CTA / sessão */}
           <div className="hidden md:flex items-center gap-3">
-            <Link to="/criar-evento" className="btn-primary text-xs px-6 py-2.5">
-              Criar evento
-            </Link>
+            {initialized && session ? (
+              <>
+                <span
+                  className="inline-flex items-center gap-1.5 text-xs text-charcoal-light max-w-[180px]"
+                  title={emailLabel}
+                >
+                  <UserIcon className="w-3.5 h-3.5 shrink-0" />
+                  <span className="truncate">{shortEmail}</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="inline-flex items-center gap-1.5 text-xs text-charcoal-light hover:text-charcoal transition-colors"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  Sair
+                </button>
+                <Link to="/criar-evento" className="btn-primary text-xs px-6 py-2.5">
+                  Criar evento
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/entrar"
+                  className="text-xs font-medium text-charcoal-light hover:text-charcoal transition-colors"
+                >
+                  Entrar
+                </Link>
+                <Link to="/cadastro" className="btn-secondary text-xs px-5 py-2.5">
+                  Criar conta
+                </Link>
+                <Link to="/criar-evento" className="btn-primary text-xs px-6 py-2.5">
+                  Criar evento
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile toggle */}
@@ -94,6 +140,37 @@ export default function Navbar() {
               >
                 Criar evento
               </Link>
+              {initialized && session ? (
+                <div className="pt-3 mt-3 border-t border-charcoal/5 space-y-1">
+                  <p className="px-4 text-xs text-charcoal-light truncate" title={emailLabel}>
+                    {shortEmail}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleSignOut}
+                    className="block w-full text-left px-4 py-3 rounded-2xl text-sm font-medium text-charcoal-light hover:bg-charcoal/5 transition-colors"
+                  >
+                    Sair
+                  </button>
+                </div>
+              ) : (
+                <div className="pt-3 mt-3 border-t border-charcoal/5 space-y-1">
+                  <Link
+                    to="/entrar"
+                    onClick={() => setIsOpen(false)}
+                    className="block px-4 py-3 rounded-2xl text-sm font-medium text-charcoal-light hover:bg-charcoal/5 transition-colors"
+                  >
+                    Entrar
+                  </Link>
+                  <Link
+                    to="/cadastro"
+                    onClick={() => setIsOpen(false)}
+                    className="block px-4 py-3 rounded-2xl text-sm font-medium text-charcoal-light hover:bg-charcoal/5 transition-colors"
+                  >
+                    Criar conta
+                  </Link>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
