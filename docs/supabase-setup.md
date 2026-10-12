@@ -13,6 +13,7 @@ Nada aqui é executado automaticamente pelo app.
 | 1 | Migrations `0001`–`0003` (schema, RLS, função `submit_rsvp`); cliente `src/lib/supabase.ts`; dependência `@supabase/supabase-js` | `bf2758b` |
 | 2 | Telas `/entrar`, `/cadastro` (com confirmação de e-mail), `/esqueci-senha`, `/redefinir-senha`; `RequireAuth` nas rotas privadas; menu de usuário na Navbar; este guia | `8db0a6d` |
 | 3 | Camada de API (`src/lib/api/`); store com modo duplo Supabase/demo (localStorage preservado sem env vars); hidratação por sessão com limpeza no logout; debounce de 400ms em edições de digitação; RSVP da página pública via RPC `submit_rsvp`; página pública carrega evento por slug no modo remoto | `337cce5` |
+| 6 | Capas no Supabase Storage: migration `0004_storage.sql` (bucket `covers` + policies), `src/lib/api/coverStorage.ts`, PersonalizaçãoPage envia para o Storage no modo remoto (data URL mantida no modo demo) | *sem commit — aguardando autorização* |
 
 ### Testado de fato (executado no ambiente)
 
@@ -28,10 +29,10 @@ Nada aqui é executado automaticamente pelo app.
 
 ### Pendências conhecidas (não bloqueiam o deploy de preview)
 
-- **Capas como data URL**: o upload de capa ainda grava data URL (funciona, mas é pesado). Migração para Supabase Storage = **Fase 6** (aguardando avaliação).
 - Testes automatizados (Vitest + CI) = Fase 7.
 - Deploy de produção e smoke test = Fase 8 (ver `deploy-vercel.md`).
 - Aviso de bundle >500 kB no build (framer-motion + supabase-js + zod); otimização com code-split futura.
+- Capas: **Fase 6 entregue em código** (migration `0004_storage.sql`); ver seção 8 para aplicação e testes.
 
 ## 1. Criar o projeto
 
@@ -46,6 +47,7 @@ Ordem obrigatória (SQL Editor → New query, um arquivo por vez, ou Supabase CL
 1. `supabase/migrations/0001_init.sql`
 2. `supabase/migrations/0002_rls.sql`
 3. `supabase/migrations/0003_rsvp.sql`
+4. `supabase/migrations/0004_storage.sql` (bucket `covers` — Fase 6)
 
 Com a CLI (opcional): `supabase link --project-ref <ref>` e
 `supabase db push`.
@@ -163,4 +165,85 @@ Pré-condições: migrations aplicadas (seção 2), Auth configurado (seção 3)
 Critério de aceitação da Fase 3: todos os itens acima marcados, com
 `npm run typecheck` e `npm run build` verdes e nenhum erro de console
 relacionado a rede/RLS durante os testes.
+
+## 8. Storage de capas (Fase 6)
+
+### Como funciona
+
+- Bucket `covers` criado pela migration `0004_storage.sql` (**aditiva** —
+  as migrations 0001–0003 e a coluna `hero_image_url` não foram alteradas).
+- Path do arquivo: `covers/{user_id}/{event_id}.jpg` — o primeiro segmento
+  é o `auth.uid()` do dono (namespaces isolados por usuário) e o segundo é
+  o `event_id`.
+- No app: a capa é comprimida no cliente (~500 KB JPEG), enviada ao bucket
+  (`upsert` no mesmo path substitui a capa) e **só a URL pública** fica
+  gravada em `event_personalization.hero_image_url`. O URL retornado traz
+  `?v=<timestamp>` (cache-buster) — sem isso, o cache de CDN poderia servir
+  a capa antiga após uma substituição.
+- **Modo demo** (sem env vars): continua gravando data URL no localStorage —
+  nada muda sem Supabase configurado.
+
+### Políticas implementadas (resumo da 0004, revisadas na auditoria)
+
+| Política | Quem | O quê |
+|---|---|---|
+| `covers_owner_select` | autenticado, **apenas seu próprio namespace** (`path[1] = auth.uid()`) | SELECT mínimo exigido pelo **upsert** (doc oficial); dono só enxerga os próprios arquivos |
+| *(anon sem policy de SELECT)* | — | `list()`/metadados **negados** para anônimos; exibição pública funciona apenas pela flag de bucket público (`/object/public/...`), que não passa por policies |
+| `covers_owner_insert` | autenticado: `path[1] = auth.uid()`, `path[2]` = uuid de **evento real do próprio usuário** (`is_event_owner`), extensão jpg/jpeg/png/webp | upload |
+| `covers_owner_update` | autenticado, dono do namespace (cobertura do `upsert` junto ao SELECT) | substituição |
+| `covers_owner_delete` | autenticado, dono do namespace | exclusão |
+
+Proteções extras do bucket: limite de 5 MB por arquivo e tipos
+`image/jpeg`, `image/png`, `image/webp` (validação server-side; o cliente
+já envia JPEG comprimido).
+
+### Limitações registradas (auditoria)
+
+1. **Idempotência da 0004**: `ON CONFLICT DO NOTHING` não atualiza um bucket
+   `covers` pré-existente com outra configuração (ex.: privado) — verifique
+   no Dashboard → Storage e use o `update` de exemplo comentado no SQL se
+   preciso.
+2. **EXECUTE (auditoria)**: `CREATE FUNCTION` concede `EXECUTE TO PUBLIC`
+   por padrão — a 0004 revoga isso dos helpers (`f_unaccent`,
+   `normalize_name`, `is_event_owner`, `is_gift_owner`) e mantém grants
+   mínimos: `anon` só executa `submit_rsvp` (K8); `authenticated` só as
+   funções necessárias. Triggers intocadas.
+2. **SELECT do dono**: foi adicionado estritamente ao namespace próprio por
+   exigência do upsert na doc oficial. Efeito colateral aceito: o dono pode
+   listar os **próprios** arquivos (que ele mesmo enviou) — nunca terceiros.
+   Refinamento por operação (`allow_any_operation`) fica pendente de
+   validação do nome exato da operação de upsert em projeto real.
+2. **Cache de CDN**: substituições usam `?v=` para fugir do cache; a URL
+   antiga **sem** sufixo pode continuar respondendo pelo cache até expirar.
+3. **Remoção da capa**: a UI limpa `hero_image_url` **primeiro** e só então
+   tenta excluir o arquivo (melhor esforço). Assim, uma falha na exclusão
+   nunca deixa o banco apontando para arquivo inexistente; o arquivo fica
+   recuperável no bucket pelo path conhecido `{uid}/{eventId}.jpg`.
+4. **Leitura pública**: bucket público = URL acessível a qualquer pessoa
+   que a tenha, inclusive via cache — não usar o bucket para nada privado.
+
+### Checklist de testes da Fase 6 (requer projeto Supabase configurado)
+
+- [ ] Aplicar `0004_storage.sql` no SQL Editor (após 0001–0003).
+- [ ] Enviar imagem na Personalização → aparece "Enviando..." → preview
+      mostra a capa via URL pública (`.../storage/v1/object/public/covers/...`).
+- [ ] Recarregar a página → capa continua (URL persistida no banco).
+- [ ] Substituir a capa → mesmo path substituído; preview atualiza.
+- [ ] Remover capa → campo limpo **e** arquivo removido do bucket
+      (Storage browser do Supabase).
+- [ ] Abrir `/e/<slug>` em navegador anônimo → capa visível (leitura pública
+      via URL do bucket, sem policy de SELECT).
+- [ ] No console do navegador (anônimo), `supabase.storage.from('covers').list()`
+      → **falha/negado** (metadados e listagem protegidos).
+- [ ] Tentar enviar sem sessão (token expirado) → mensagem "Sessão expirada".
+- [ ] Usuário B (outra conta) **não** consegue sobrescrever/excluir a capa
+      de A via API do Storage (policies negam; testar pelo SQL Editor com
+      papel `authenticated` ou console do navegador).
+- [ ] Página pública com capa >5 MB ou em formato não suportado → bucket
+      rejeita (erro amigável na UI).
+- [ ] Modo demo (sem env vars): upload de capa continua como data URL.
+
+Critério de aceitação da Fase 6: checklist acima aprovado, com
+`npm run typecheck` e `npm run build` verdes no modo remoto e no modo demo.
+
 
