@@ -28,3 +28,10 @@ export const supabase = createClient(
     },
   }
 );
+
+// Verdadeiro quando as env vars estão preenchidas — o app só tenta falar com
+// o Supabase nesse caso; caso contrário entra em modo demo (localStorage),
+// preservando o comportamento original do projeto.
+export function isSupabaseConfigured(): boolean {
+  return Boolean(supabaseUrl && supabaseAnonKey);
+}

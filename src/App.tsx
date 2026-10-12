@@ -1,8 +1,11 @@
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import AIAssistant from './components/AIAssistant';
 import RequireAuth from './components/RequireAuth';
+import { useAuth } from './store/useAuth';
+import { useStore } from './store/useStore';
 import LandingPage from './pages/LandingPage';
 import CreateEventPage from './pages/CreateEventPage';
 import DashboardPage from './pages/DashboardPage';
@@ -21,6 +24,16 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 function AppShell() {
   const location = useLocation();
   const isPublicEvent = location.pathname.startsWith('/e/');
+  const session = useAuth((s) => s.session);
+  const authInitialized = useAuth((s) => s.initialized);
+
+  // Hidrata os eventos do usuário quando a sessão fica pronta (ou é limpa
+  // no logout, evitando cache de dados privados em navegador compartilhado).
+  useEffect(() => {
+    if (authInitialized) {
+      void useStore.getState().hydrate();
+    }
+  }, [authInitialized, session?.user?.id]);
 
   return (
     <div className="min-h-screen bg-cream font-body text-charcoal">
