@@ -37,8 +37,11 @@ Nada aqui é executado automaticamente pelo app.
 ## 1. Criar o projeto
 
 1. Acesse <https://supabase.com> → New project (região recomendada: `sa-east-1`).
-2. Anote (sem versionar!) a **Project URL** e a **anon key** em *Settings → API*.
-3. A **service_role key** nunca deve sair do painel nem entrar em `.env`/`VITE_*`.
+2. Anote (sem versionar!) a **Project URL** e a **publishable key**
+   (`sb_publishable_*`; a anon legada também funciona temporariamente) em
+   *Settings → API*.
+3. A **secret key (`sb_secret_*`) / service_role** nunca deve sair do painel
+   nem entrar em `.env`/`VITE_*`.
 
 ## 2. Aplicar as migrations
 
@@ -86,7 +89,7 @@ Em *Project → Settings → Environment Variables* (somente valores públicos):
 | Nome | Valor |
 |---|---|
 | `VITE_SUPABASE_URL` | Project URL do Supabase |
-| `VITE_SUPABASE_ANON_KEY` | anon key |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | publishable key (`sb_publishable_*`) |
 
 Repositório canônico (decisão K6): o já existente no GitHub
 (`origin`), branch `main` — a Vercel deve apontar para ele, sem criar

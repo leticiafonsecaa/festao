@@ -31,12 +31,12 @@ públicas por natureza (`VITE_*`).
 ## 3. Variáveis de ambiente
 
 Em *Project → Settings → Environment Variables* (somente valores
-públicos — anon key é segura no cliente com RLS ativo):
+públicos — publishable key é segura no cliente com RLS ativo):
 
 | Nome | Valor | Onde obter |
 |---|---|---|
 | `VITE_SUPABASE_URL` | Project URL | Supabase → Settings → API |
-| `VITE_SUPABASE_ANON_KEY` | anon key | Supabase → Settings → API |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | publishable key (`sb_publishable_*`; anon legada válida como alternativa temporária) | Supabase → Settings → API |
 
 - Marcar para **Production, Preview e Development**.
 - **Nunca** adicionar `service_role` ou qualquer `SUPABASE_SECRET` aqui —
