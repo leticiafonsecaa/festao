@@ -78,18 +78,25 @@ export default function CreateEventPage() {
 
   const prevStep = () => setStep((s) => Math.max(s - 1, 0));
 
-  const handleCreate = () => {
-    const id = createEvent({
-      name: formData.name,
-      type: formData.type as EventModel['type'],
-      date: formData.date,
-      time: formData.time,
-      venue: formData.venue,
-      city: formData.city,
-      description: formData.description,
-      hosts: formData.hosts,
-    });
-    navigate(`/dashboard/${id}`);
+  const handleCreate = async () => {
+    try {
+      const id = await createEvent({
+        name: formData.name,
+        type: formData.type as EventModel['type'],
+        date: formData.date,
+        time: formData.time,
+        venue: formData.venue,
+        city: formData.city,
+        description: formData.description,
+        hosts: formData.hosts,
+      });
+      navigate(`/dashboard/${id}`);
+    } catch {
+      setErrors((prev) => ({
+        ...prev,
+        name: 'Não foi possível criar o evento. Verifique sua conexão e tente novamente.',
+      }));
+    }
   };
 
   return (

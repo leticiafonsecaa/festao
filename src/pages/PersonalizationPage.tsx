@@ -8,6 +8,8 @@ import {
   Globe, ExternalLink, Copy, Image as ImageIcon, Info
 } from 'lucide-react';
 import { copyText, slugify, safeHex, getCountdown, compressImage } from '../lib/eventUtils';
+import { uploadCoverForEvent, removeCoverForEvent } from '../lib/api/coverStorage';
+import { isSupabaseConfigured } from '../lib/supabase';
 import ImageCropper from '../components/ImageCropper';
 
 const fadeUp = {
@@ -143,7 +145,14 @@ export default function PersonalizationPage() {
     setHeroUploading(true);
     try {
       const dataUrl = await compressImage(cropped);
-      updatePersonalization(event.id, { heroImage: dataUrl });
+      if (isSupabaseConfigured()) {
+        // Fase 6: capa vai para o Storage; só a URL pública fica no banco.
+        const publicUrl = await uploadCoverForEvent(event.id, dataUrl);
+        updatePersonalization(event.id, { heroImage: publicUrl });
+      } else {
+        // Modo demo (sem env vars): data URL no localStorage, como sempre.
+        updatePersonalization(event.id, { heroImage: dataUrl });
+      }
       setHeroFailed(false);
     } catch (err) {
       setHeroError(err instanceof Error ? err.message : 'Não foi possível enviar a imagem.');
@@ -418,8 +427,15 @@ export default function PersonalizationPage() {
                     <button
                       type="button"
                       onClick={() => {
+                        const previous = p.heroImage;
                         updatePersonalization(event.id, { heroImage: '' });
                         setHeroError('');
+                        // No modo remoto, remove também o arquivo do bucket
+                        // (melhor esforço; a URL pública antiga pode continuar
+                        // acessível até o próximo deploy do cache do CDN).
+                        if (isSupabaseConfigured() && previous.startsWith('http')) {
+                          void removeCoverForEvent(event.id).catch(() => undefined);
+                        }
                       }}
                       className="btn-secondary text-xs text-rose"
                     >

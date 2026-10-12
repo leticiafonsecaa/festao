@@ -3,8 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, MapPin, Map, ExternalLink, Gift, Heart } from 'lucide-react';
 import { useStore } from '../store/useStore';
-import type { Guest } from '../store/useStore';
-import { eventTypeMeta, safeHex, getCountdown, formatBRL, normalizeName } from '../lib/eventUtils';
+import { eventTypeMeta, safeHex, getCountdown, formatBRL } from '../lib/eventUtils';
 import { averageImageColor, pickTextColor, HERO_TEXT_DARK, HERO_TEXT_LIGHT } from '../lib/heroContrast';
 
 const fadeUp = {
@@ -21,13 +20,19 @@ const isHttpUrl = (value: string) => /^https?:\/\//i.test(value);
 export default function PublicEventPage() {
   const { slug } = useParams<{ slug: string }>();
   const events = useStore((s) => s.events);
-  const addGuest = useStore((s) => s.addGuest);
-  const updateGuest = useStore((s) => s.updateGuest);
+  const loadPublicEvent = useStore((s) => s.loadPublicEvent);
+  const submitPublicRsvp = useStore((s) => s.submitPublicRsvp);
   const event = events.find((e) => e.slug === slug && e.published);
   const [heroFailed, setHeroFailed] = useState(false);
   const [coverAverage, setCoverAverage] = useState<string | null>(null);
   const [now, setNow] = useState(() => new Date());
   const coverSrc = event?.personalization.heroImage ?? '';
+
+  // Carrega o evento publicado pelo slug quando o backend remoto está ativo
+  // (modo demo: os dados já vêm do localStorage).
+  useEffect(() => {
+    if (slug) void loadPublicEvent(slug);
+  }, [slug, loadPublicEvent]);
 
   // Cor média da capa importada: define se o texto do topo fica claro ou escuro.
   useEffect(() => {
@@ -52,51 +57,42 @@ export default function PublicEventPage() {
   const [rsvpPlusOne, setRsvpPlusOne] = useState(false);
   const [rsvpPlusOneName, setRsvpPlusOneName] = useState('');
   const [rsvpNotes, setRsvpNotes] = useState('');
-  const [rsvpErrors, setRsvpErrors] = useState<{ name?: string; choice?: string }>({});
+  const [rsvpErrors, setRsvpErrors] = useState<{ name?: string; choice?: string; submit?: string }>({});
   const [rsvpDone, setRsvpDone] = useState<{ name: string; choice: 'confirmed' | 'declined' } | null>(null);
+  const [rsvpSending, setRsvpSending] = useState(false);
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(new Date()), 30000);
     return () => window.clearInterval(id);
   }, []);
 
-  const handleSubmitRsvp = () => {
+  const handleSubmitRsvp = async () => {
     if (!event) return;
-    const errors: { name?: string; choice?: string } = {};
+    const errors: { name?: string; choice?: string; submit?: string } = {};
     if (!rsvpChoice) errors.choice = 'Escolha uma das opções.';
     if (!rsvpName.trim()) errors.name = 'Informe seu nome completo.';
     setRsvpErrors(errors);
     if (errors.choice || errors.name || !rsvpChoice) return;
 
-    const choice: Guest['rsvp'] = rsvpChoice;
-    const respondedAt = new Date().toISOString();
-    const base = {
-      rsvp: choice,
-      plusOne: rsvpPlusOne,
-      plusOneName: rsvpPlusOne && rsvpPlusOneName.trim() ? rsvpPlusOneName.trim() : undefined,
-      notes: rsvpNotes.trim() || undefined,
-      respondedAt,
-      respondedVia: 'public' as const,
-    };
-
-    const existing = event.guests.find(
-      (g) => normalizeName(g.name) === normalizeName(rsvpName)
-    );
-    if (existing) {
-      updateGuest(event.id, existing.id, {
-        ...base,
-        ...(rsvpEmail.trim() ? { email: rsvpEmail.trim() } : {}),
-        ...(rsvpPhone.trim() ? { phone: rsvpPhone.trim() } : {}),
-      });
-    } else {
-      addGuest(event.id, {
-        ...base,
+    setRsvpSending(true);
+    try {
+      await submitPublicRsvp(event.slug, {
         name: rsvpName.trim(),
+        choice: rsvpChoice,
         email: rsvpEmail.trim(),
         phone: rsvpPhone.trim(),
+        plusOne: rsvpPlusOne,
+        plusOneName: rsvpPlusOne && rsvpPlusOneName.trim() ? rsvpPlusOneName.trim() : undefined,
+        notes: rsvpNotes.trim() || undefined,
       });
+      setRsvpDone({ name: rsvpName.trim(), choice: rsvpChoice });
+    } catch (err) {
+      setRsvpErrors({
+        submit: err instanceof Error ? err.message : 'Não foi possível registrar sua resposta.',
+      });
+    } finally {
+      setRsvpSending(false);
     }
-    setRsvpDone({ name: rsvpName.trim(), choice: rsvpChoice });
   };
 
   if (!event) {
@@ -424,12 +420,17 @@ export default function PublicEventPage() {
                     />
                   </div>
 
+                  {rsvpErrors.submit && (
+                    <p className="text-rose text-xs">{rsvpErrors.submit}</p>
+                  )}
+
                   <button
                     type="submit"
-                    className="w-full text-white text-sm font-medium rounded-xl px-5 py-3 transition-colors duration-150 min-h-[44px]"
+                    disabled={rsvpSending}
+                    className="w-full text-white text-sm font-medium rounded-xl px-5 py-3 transition-colors duration-150 min-h-[44px] disabled:opacity-60"
                     style={{ backgroundColor: secondaryHex }}
                   >
-                    Enviar resposta
+                    {rsvpSending ? 'Enviando…' : 'Enviar resposta'}
                   </button>
                 </form>
               )}
