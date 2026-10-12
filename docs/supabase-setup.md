@@ -13,7 +13,7 @@ Nada aqui é executado automaticamente pelo app.
 | 1 | Migrations `0001`–`0003` (schema, RLS, função `submit_rsvp`); cliente `src/lib/supabase.ts`; dependência `@supabase/supabase-js` | `bf2758b` |
 | 2 | Telas `/entrar`, `/cadastro` (com confirmação de e-mail), `/esqueci-senha`, `/redefinir-senha`; `RequireAuth` nas rotas privadas; menu de usuário na Navbar; este guia | `8db0a6d` |
 | 3 | Camada de API (`src/lib/api/`); store com modo duplo Supabase/demo (localStorage preservado sem env vars); hidratação por sessão com limpeza no logout; debounce de 400ms em edições de digitação; RSVP da página pública via RPC `submit_rsvp`; página pública carrega evento por slug no modo remoto | `337cce5` |
-| 6 | Capas no Supabase Storage: migration `0004_storage.sql` (bucket `covers` + policies), `src/lib/api/coverStorage.ts`, PersonalizaçãoPage envia para o Storage no modo remoto (data URL mantida no modo demo) | *sem commit — aguardando autorização* |
+| 6 | Capas no Supabase Storage: migration `20261012103000_storage.sql` (bucket `covers` + policies), `src/lib/api/coverStorage.ts`, PersonalizaçãoPage envia para o Storage no modo remoto (data URL mantida no modo demo) | `79234e6` |
 
 ### Testado de fato (executado no ambiente)
 
@@ -32,7 +32,7 @@ Nada aqui é executado automaticamente pelo app.
 - Testes automatizados (Vitest + CI) = Fase 7.
 - Deploy de produção e smoke test = Fase 8 (ver `deploy-vercel.md`).
 - Aviso de bundle >500 kB no build (framer-motion + supabase-js + zod); otimização com code-split futura.
-- Capas: **Fase 6 entregue em código** (migration `0004_storage.sql`); ver seção 8 para aplicação e testes.
+- Capas: **Fase 6 entregue em código** (migration `20261012103000_storage.sql`); ver seção 8 para aplicação e testes.
 
 ## 1. Criar o projeto
 
@@ -47,10 +47,10 @@ Nada aqui é executado automaticamente pelo app.
 
 Ordem obrigatória (SQL Editor → New query, um arquivo por vez, ou Supabase CLI):
 
-1. `supabase/migrations/0001_init.sql`
-2. `supabase/migrations/0002_rls.sql`
-3. `supabase/migrations/0003_rsvp.sql`
-4. `supabase/migrations/0004_storage.sql` (bucket `covers` — Fase 6)
+1. `supabase/migrations/20261011180000_init.sql`
+2. `supabase/migrations/20261011190000_rls.sql`
+3. `supabase/migrations/20261012083000_rsvp.sql`
+4. `supabase/migrations/20261012103000_storage.sql` (bucket `covers` — Fase 6)
 
 Com a CLI (opcional): `supabase link --project-ref <ref>` e
 `supabase db push`.
@@ -173,8 +173,8 @@ relacionado a rede/RLS durante os testes.
 
 ### Como funciona
 
-- Bucket `covers` criado pela migration `0004_storage.sql` (**aditiva** —
-  as migrations 0001–0003 e a coluna `hero_image_url` não foram alteradas).
+- Bucket `covers` criado pela migration `20261012103000_storage.sql` (**aditiva** —
+  as migrations init–rsvp e a coluna `hero_image_url` não foram alteradas).
 - Path do arquivo: `covers/{user_id}/{event_id}.jpg` — o primeiro segmento
   é o `auth.uid()` do dono (namespaces isolados por usuário) e o segundo é
   o `event_id`.
@@ -227,7 +227,7 @@ já envia JPEG comprimido).
 
 ### Checklist de testes da Fase 6 (requer projeto Supabase configurado)
 
-- [ ] Aplicar `0004_storage.sql` no SQL Editor (após 0001–0003).
+- [ ] Aplicar `20261012103000_storage.sql` no SQL Editor (após as migrations init, rls e rsvp).
 - [ ] Enviar imagem na Personalização → aparece "Enviando..." → preview
       mostra a capa via URL pública (`.../storage/v1/object/public/covers/...`).
 - [ ] Recarregar a página → capa continua (URL persistida no banco).

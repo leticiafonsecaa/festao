@@ -1,6 +1,6 @@
 // Leituras públicas (anônimas) da página /e/<slug> e envio de RSVP.
-// Usa as views definer de 0002_rls.sql (somente eventos publicados, sem PII)
-// e a função submit_rsvp de 0003_rsvp.sql (único caminho de escrita anônima).
+// Usa as views definer de 20261011190000_rls.sql (somente eventos publicados, sem PII)
+// e a função submit_rsvp de 20261012083000_rsvp.sql (único caminho de escrita anônima).
 
 import { supabase } from '../supabase';
 import type { Event } from '../../store/useStore';

@@ -1,4 +1,4 @@
--- 0003_rsvp.sql — Caminho único de escrita anônima (RSVP da página pública).
+-- 20261012083000_rsvp.sql — Caminho único de escrita anônima (RSVP da página pública).
 -- Decisão aprovada (K8): upsert por nome normalizado + rate limit por IP.
 -- A função é SECURITY DEFINER: executa com privilégio do owner e valida tudo
 -- internamente; o cliente nunca escreve diretamente na tabela guests.

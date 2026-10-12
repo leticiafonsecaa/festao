@@ -1,5 +1,5 @@
 // Operações do dono (autenticado) sobre eventos, convidados e presentes.
-// Todas dependem das policies RLS de 0002_rls.sql — o banco filtra por
+// Todas dependem das policies RLS de 20261011190000_rls.sql — o banco filtra por
 // auth.uid(); nada aqui envia user_id manualmente em inserts (a policy
 // confirma o dono no WITH CHECK).
 

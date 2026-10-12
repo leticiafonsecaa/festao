@@ -1,7 +1,7 @@
--- 0002_rls.sql — Row Level Security do Festão.
+-- 20261011190000_rls.sql — Row Level Security do Festão.
 -- Princípio: nenhuma tabela acessível pelo cliente opera sem política.
 -- Anônimo só vê dados de eventos publicados (via views) e só escreve RSVP
--- através da função submit_rsvp() da 0003_rsvp.sql.
+-- através da função submit_rsvp() da 20261012083000_rsvp.sql.
 
 -- ---------------------------------------------------------------------------
 -- Habilitar RLS em todas as tabelas

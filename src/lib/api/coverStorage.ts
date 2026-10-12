@@ -1,6 +1,6 @@
 // Upload e remoção de capas no Supabase Storage (bucket `covers`).
 // Path: covers/{user_id}/{event_id}.jpg — o 1º segmento é o auth.uid() do
-// dono, validado pelas policies da migration 0004_storage.sql.
+// dono, validado pelas policies da migration 20261012103000_storage.sql.
 //
 // ATENÇÃO: o bucket é público para leitura (a página pública do evento
 // exibe a capa). Qualquer pessoa com a URL consegue acessar o arquivo.

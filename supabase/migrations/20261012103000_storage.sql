@@ -1,5 +1,6 @@
--- 0004_storage.sql — Bucket de capas (Supabase Storage). ADITIVA.
--- Não altera 0001–0003; a coluna hero_image_url (0001) já persiste a URL.
+-- 20261012103000_storage.sql — Bucket de capas (Supabase Storage). ADITIVA.
+-- Não altera 20261011180000_init – 20261012083000_rsvp; a coluna
+-- hero_image_url (init) já persiste a URL.
 --
 -- Identificação (revisada na auditoria final da Fase 6):
 --   • Evento:PK events.id (uuid gerado pelo banco).

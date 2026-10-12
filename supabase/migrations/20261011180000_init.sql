@@ -1,6 +1,7 @@
--- 0001_init.sql — Schema inicial do Festão (Supabase / PostgreSQL).
+-- 20261011180000_init.sql — Schema inicial do Festão (Supabase / PostgreSQL).
 -- NÃO executar no navegador nem no app: aplicar via Supabase CLI ou SQL editor.
--- Ordem: 0001_init.sql → 0002_rls.sql → 0003_rsvp.sql
+-- Ordem: 20261011180000_init.sql → 20261011190000_rls.sql →
+--          20261012083000_rsvp.sql → 20261012103000_storage.sql
 
 create extension if not exists pgcrypto;
 create extension if not exists unaccent;

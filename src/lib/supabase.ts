@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 // Cliente Supabase do Festão.
 // Usa apenas variáveis PÚBLICAS (VITE_*) — a publishable key (sb_publishable_*)
 // é segura no cliente desde que as políticas RLS
-// (supabase/migrations/0002_rls.sql) estejam aplicadas. A anon key legada
+// (supabase/migrations/20261011190000_rls.sql) estejam aplicadas. A anon key legada
 // (JWT) continua funcionando como alternativa temporária. A secret key
 // (sb_secret_*) / service_role NUNCA deve ser usada aqui.
 

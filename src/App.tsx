@@ -31,7 +31,11 @@ function AppShell() {
   // no logout, evitando cache de dados privados em navegador compartilhado).
   useEffect(() => {
     if (authInitialized) {
-      void useStore.getState().hydrate();
+      if (session) {
+        void useStore.getState().hydrate();
+      } else {
+        useStore.getState().resetLocalState();
+      }
     }
   }, [authInitialized, session?.user?.id]);
 

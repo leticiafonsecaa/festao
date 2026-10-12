@@ -87,6 +87,7 @@ interface AppState {
   loadPublicEvent: (slug: string) => Promise<void>;
   submitPublicRsvp: (slug: string, payload: PublicRsvpPayload) => Promise<void>;
   clearSyncError: () => void;
+  resetLocalState: () => void;
 
   // Event actions
   createEvent: (event: NewEventInput) => Promise<string>;
@@ -219,6 +220,8 @@ export const useStore = create<AppState>()(
         lastSyncError: null,
 
         clearSyncError: () => set({ lastSyncError: null }),
+
+        resetLocalState: () => set({ events: [] }),
 
         hydrate: async () => {
           if (!remote()) {
