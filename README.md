@@ -1,262 +1,237 @@
-# React + TypeScript + Vite
+# Festivity
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Festivity** é uma plataforma web de planejamento e organização de eventos — casamentos, festas de 15 anos, aniversários, eventos corporativos e outras celebrações. Ela reúne, em um só lugar, a criação do evento, a lista de convidados com controle de confirmações (RSVP), a lista de presentes, a personalização e a publicação de uma página pública do evento, acessível por link compartilhável.
 
-Currently, two official plugins are available:
+## Sobre o projeto
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Organizar um evento envolve muitas informações espalhadas: convidados e suas confirmações, presentes, data, local, visual da página do evento e muito mais. O Festivity foi criado para centralizar esse controle em uma única plataforma, com uma interface voltada a quem organiza o evento (o anfitrião) e uma página pública simples para os convidados acessarem informações e confirmarem presença sem precisar criar conta.
 
-## React Compiler
+**Público-alvo:** anfitriões de eventos pessoais (casamentos, festas de 15 anos, aniversários) e organizadores de eventos corporativos, além dos próprios convidados, que interagem apenas com a página pública do evento.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+A aplicação funciona em dois modos (ver [Banco de dados e integrações](#banco-de-dados-e-integrações)):
 
-## Expanding the ESLint configuration
+- **Modo remoto:** com as variáveis do Supabase configuradas, dados e autenticação ficam no Supabase (banco, RLS e Storage).
+- **Modo demo:** sem as variáveis, tudo é persistido no `localStorage` do navegador (chave `festsao-storage`), o que permite testar o fluxo completo sem backend — porém os dados ficam restritos ao navegador onde foram criados.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Funcionalidades
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Concluídas
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- **Autenticação** (`/cadastro`, `/entrar`, `/esqueci-senha`, `/redefinir-senha`): cadastro com confirmação de e-mail, login, recuperação e redefinição de senha via Supabase Auth, com mensagens de erro em pt-BR (`src/lib/authErrors.ts`) e validação de formulários com Zod.
+- **Rotas protegidas:** `/criar-evento`, `/dashboard` e `/eventos/*` exigem sessão (`src/components/RequireAuth.tsx`), redirecionando para `/entrar?next=...` e preservando o destino (com proteção contra open redirect).
+- **Criação de evento** (`/criar-evento`): assistente de 4 etapas (tipo, detalhes, descrição, confirmação) com validação, cobrindo os tipos casamento, 15 anos, aniversário, corporativo e outro.
+- **Dashboard** (`/dashboard` e `/dashboard/:id`): lista de eventos, estatísticas (convidados, confirmações, presentes, dias restantes), atalhos, atividade recente e card de publicação com cópia do link.
+- **Convidados** (`/eventos/:id/convidados`): cadastro, edição e remoção, busca, filtro por RSVP (pendente/confirmado/recusado), acompanhante (plus-one), mesa e observações; respostas dadas pela página pública recebem o selo "via página".
+- **Lista de presentes** (`/eventos/:id/presentes`): itens por categoria, opções de loja/preço em BRL, busca, marcação de presente recebido (com quem presenteou) e totais.
+- **Personalização e publicação** (`/eventos/:id/personalizar`): cores, frase de efeito, capa (recorte de imagem no navegador), toggles do que exibir e informações do evento, com preview ao vivo; **publicar** gera um slug único (`/e/<slug>`), permite copiar o link, abrir a página, despublicar e republicar mantendo o mesmo endereço. No modo remoto a capa é enviada ao Supabase Storage; no modo demo fica como data URL no `localStorage`.
+- **Página pública do evento** (`/e/:slug`): sem Navbar/Footer/assistente, exibe capa, contagem regressiva, local, presentes e formulário de RSVP completo (nome, resposta, contato, acompanhante, observações), com validação e tela de sucesso/alteração de resposta. No modo remoto, o RSVP é registrado via função `submit_rsvp` (com rate limit); no modo demo, o convidado existente é atualizado por nome normalizado ou um novo é criado.
+- **Conexão com Supabase:** cliente em `src/lib/supabase.ts`, camada de API em `src/lib/api/` (eventos/convidados/presentes, leituras públicas por slug, capas), store em modo duplo com atualização otimista, debounce de 400 ms nas edições de digitação e tratamento de erro de sincronização (`lastSyncError`).
+- **Testes automatizados:** suíte Vitest + jsdom + Testing Library (4 arquivos, 16 testes) cobrindo utilitários, erros de auth, store em modo demo e o guarda de rotas.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Demonstrativas (conteúdo fictício, sem backend)
 
-```
+- **Serviços e fornecedores** (`/servicos`) e **perfil do profissional** (`/profissional/:id`): listas e perfis com dados mockados no próprio código (fotografia, decoração, buffet, música/DJ, maquiagem, espaços). Não há busca, contato ou contratação reais.
+- **Assistente** (widget flutuante e rota `/agente`): conversa por palavras-chave com respostas prontas em `src/lib/agente.ts`. **Não usa IA nem chave de API** — é um roteiro de demonstração offline.
+- **Landing page:** seções institucionais com mockup ilustrativo do produto.
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+### Não implementadas
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- **Orçamento/controle financeiro:** citado apenas nas respostas do assistente; não existe tela nem rota de orçamento no código.
+- **Link de convite individual por convidado:** citado no texto do assistente; a implementação atual compartilha apenas o link público do evento (`/e/<slug>`).
+- **Envio de e-mails/SMS de convite, notificações e upload de mídia além da capa.**
+- **Testes de integração com Supabase real, CI e script de lint** (ver [Limitações e próximos passos](#limitações-e-próximos-passos)).
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Tecnologias utilizadas
+
+| Tecnologia | Finalidade |
+|---|---|
+| [React 18](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/) | Interface e tipagem estática do código |
+| [Vite 7](https://vite.dev/) | Servidor de desenvolvimento e build de produção |
+| [React Router 6](https://reactrouter.com/) | Navegação por rotas (SPA), incluindo rotas privadas e a página pública |
+| [Tailwind CSS 3](https://tailwindcss.com/) + PostCSS/Autoprefixer | Estilização utilitária e tema visual (`tailwind.config.js`, `src/index.css`) |
+| [Zustand](https://github.com/pmndrs/zustand) | Estado global: dados do evento (`src/store/useStore.ts`) e sessão (`src/store/useAuth.ts`) |
+| [Supabase JS SDK](https://supabase.com/docs/reference/javascript) | Autenticação, banco de dados (PostgreSQL) e Storage |
+| [Zod](https://zod.dev/) | Validação dos formulários de autenticação |
+| [Framer Motion](https://www.framer.com/motion/) | Animações e transições da interface |
+| [Lucide React](https://lucide.dev/) | Ícones |
+| [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) + jsdom | Testes unitários e de componente |
+| [Vercel](https://vercel.com/) | Plataforma de deploy prevista (`vercel.json` com rewrite de SPA) |
+
+> Observação: o `package.json` declara também dependências que não são usadas no código-fonte (ex.: `three`, `gsap`, `matter-js`, `cannon-es`, `i18next`, `react-use`, `@headlessui/react`, `clsx`). Elas existem apenas no manifesto, sem imports em `src/`.
+
+## Estrutura do projeto
 
 ```
----
+festao/
+├── docs/                        # Documentação de configuração e relatórios
+│   ├── supabase-setup.md        # Guia manual do Supabase (conta, migrations, auth, checklists)
+│   ├── deploy-vercel.md         # Roteiro de deploy na Vercel (ainda não executado)
+│   └── relatorio-final-fase-6.md
+├── public/                      # Ícones e arquivos estáticos (branding, favicon)
+├── supabase/
+│   └── migrations/              # 4 migrations SQL (schema, RLS, RSVP, Storage)
+│       ├── 20261011180000_init.sql
+│       ├── 20261011190000_rls.sql
+│       ├── 20261012083000_rsvp.sql
+│       └── 20261012103000_storage.sql
+├── src/
+│   ├── components/              # Navbar, Footer, AIAssistant, ImageCropper, RequireAuth
+│   ├── lib/
+│   │   ├── api/                 # eventsApi, publicApi, coverStorage, mappers
+│   │   ├── supabase.ts          # Cliente Supabase + isSupabaseConfigured()
+│   │   ├── agente.ts            # Assistente de demonstração (regras por palavras-chave)
+│   │   ├── authErrors.ts        # Erros de auth traduzidos para pt-BR
+│   │   ├── eventUtils.ts        # slugify, normalização, preços BRL, contagem etc.
+│   │   └── heroContrast.ts      # Contraste de texto sobre a capa
+│   ├── pages/                   # Todas as telas (landing, auth, dashboard, pública...)
+│   ├── store/
+│   │   ├── useStore.ts          # Estado dos eventos (modo Supabase/demo, persist local)
+│   │   └── useAuth.ts           # Sessão do Supabase Auth
+│   ├── test/setup.ts            # Setup do Vitest (jest-dom)
+│   ├── App.tsx                  # Rotas e shell da aplicação
+│   └── main.tsx                 # Bootstrap (restaura sessão e renderiza)
+├── .env.example                 # Variáveis de ambiente necessárias (placeholders)
+├── vercel.json                  # Rewrite de SPA para produção
+├── vite.config.ts               # Configuração do Vite
+└── vitest.config.ts             # Configuração dos testes (jsdom)
+```
 
-# Documentação das Alterações — Projeto Festão
+**Responsabilidades principais:**
 
-## 1. Resumo geral das alterações
+- `src/App.tsx` — define todas as rotas e o shell: páginas privadas ficam atrás de `RequireAuth`; a rota `/e/:slug` é renderizada sem Navbar, Footer nem assistente.
+- `src/store/useStore.ts` — núcleo dos dados. Decide entre Supabase (função `remote()`) e `localStorage`; concentra as ações de eventos, convidados, presentes, personalização, publicação e RSVP.
+- `src/store/useAuth.ts` — sessão do usuário (restauração, listener de mudanças e logout) sobre o SDK do Supabase.
+- `src/lib/api/` — única camada que fala com o banco/Storage no modo remoto; `mappers.ts` converte snake_case ↔ camelCase.
+- `supabase/migrations/` — esquema relacional, Row Level Security, função `submit_rsvp` e bucket de capas.
 
-O objetivo foi tornar o projeto **apresentável em uma demonstração de ponta a ponta, 100% frontend**: criar evento → cadastrar convidados → cadastrar presentes → personalizar → **publicar** → abrir a **página pública** → **confirmar presença como convidado** → voltar ao dashboard e ver a confirmação.
+## Pré-requisitos
 
-Até então esse fluxo não existia: não havia nenhum código de publicação, a página pública não existia, e várias telas estavam visualmente quebradas (estilos ausentes), com erros de TypeScript e bugs de formatação/filtro.
+- **Node.js** `^20.19.0 || >=22.12.0` (exigido pelo Vite 7 — `engines` declarado no pacote do Vite).
+- **npm** (verificado com a versão 11 neste ambiente).
+- **Git**, para clonar o repositório.
+- **Conta no [Supabase](https://supabase.com)** — opcional: sem ela, o app roda no modo demo (`localStorage`). Necessária apenas para usar autenticação, dados remotos e Storage de verdade.
+- **Conta na [Vercel](https://vercel.com)** — apenas se for fazer o deploy (opcional; passos em `docs/deploy-vercel.md`).
 
-**Números:** 15 arquivos alterados, sendo **2 novos** e **0 removidos** — 1.356 linhas adicionadas, 186 removidas. Tudo distribuído em **7 commits** (um por passo) e enviado ao repositório `https://github.com/camilev07/festao`.
+## Como executar o projeto
 
-**Nenhuma dependência foi instalada ou removida** e o `package-lock.json` **não foi tocado**. Toda a persistência continua sendo o `localStorage` via Zustand `persist` (chave `festsao-storage`, inalterada para não apagar dados existentes). Não foi criado backend, banco, API, autenticação, e-mail nem upload para servidor.
+```bash
+# 1. Clonar o repositório
+git clone https://github.com/leticiafonsecaa/festao.git
+cd festao
 
-**Arquivos novos:**
-- `src/lib/eventUtils.ts` — biblioteca de funções puras/utilitárias.
-- `src/pages/PublicEventPage.tsx` — a página pública do evento.
+# 2. Instalar dependências
+npm install
 
-**Arquivos removidos:** nenhum.
+# 3. (Opcional) configurar o Supabase — ver "Configuração do ambiente"
+cp .env.example .env.local
+# edite .env.local com a URL e a chave públicas do seu projeto
 
----
+# 4. Iniciar em desenvolvimento
+npm run dev
+# a aplicação abre em http://localhost:5173
+```
 
-## 2. Arquivos alterados
+### Comandos disponíveis
 
-| # | Arquivo | Tipo | Resumo |
-|---|---------|------|--------|
-| 1 | `package.json` | alterado | Adicionado o script `typecheck` |
-| 2 | `src/index.css` | alterado | Criadas as classes `card-base`, `btn-secondary`, `btn-blush` |
-| 3 | `src/App.tsx` | alterado | Nova rota `/e/:slug`, rota curinga `*` e shell que oculta Navbar/Footer/IA na página pública |
-| 4 | `src/components/Footer.tsx` | alterado | Link quebrado `/presentes` corrigido para `/dashboard` |
-| 5 | `src/lib/eventUtils.ts` | **novo** | Funções utilitárias puras (slug, cores, contagem, preços, cópia, compressão de imagem) |
-| 6 | `src/store/useStore.ts` | alterado | Campos de publicação e RSVP, migração de dados antigos e sincronização entre abas |
-| 7 | `src/pages/LandingPage.tsx` | alterado | Cores inexistentes (`coral`/`peach`) trocadas pelas reais do tema |
-| 8 | `src/pages/CreateEventPage.tsx` | alterado | Correção de tipos, imports mortos e ajustes de responsividade |
-| 9 | `src/pages/PersonalizationPage.tsx` | alterado | Botão fake de salvar → publicar/despublicar; cards de Informações, Capa e Publicação; preview real |
-| 10 | `src/pages/PublicEventPage.tsx` | **novo** | Página pública completa, incluindo o formulário de RSVP |
-| 11 | `src/pages/GiftListPage.tsx` | alterado | Preços parseados e formatados corretamente em BRL; modal responsivo |
-| 12 | `src/pages/ServicesPage.tsx` | alterado | Apenas removido um import não usado (o filtro já estava correto) |
-| 13 | `src/pages/GuestsPage.tsx` | alterado | Selo "via página", exibição de observações, registro de origem da resposta e responsividade |
-| 14 | `src/pages/DashboardPage.tsx` | alterado | Contagem regressiva real, atividade recente com horários e card "Página do evento" |
-| 15 | `src/pages/ProfessionalProfilePage.tsx` | alterado | Apenas removido um import não usado |
+| Comando | O que faz |
+|---|---|
+| `npm run dev` | Sobe o servidor de desenvolvimento do Vite (HMR) |
+| `npm run build` | Gera o build de produção em `dist/` |
+| `npm run preview` | Serve localmente o build de `dist/` |
+| `npm run typecheck` | Verifica tipos com `tsc -p tsconfig.app.json --noEmit` (sem gerar arquivos) |
+| `npm test` | Executa a suíte de testes uma vez (Vitest, `vitest run`) |
+| `npm run test:watch` | Executa os testes em modo watch |
 
----
+Verificação registrada neste ambiente: `npm run typecheck` sem erros, `npm test` com **4 arquivos / 16 testes aprovados** e `npm run build` concluído com sucesso (com o aviso de bundle >500 kB, tratado em [Limitações e próximos passos](#limitações-e-próximos-passos)).
 
-## 3. O que foi alterado em cada arquivo
+> Não existe script de lint no `package.json`. O arquivo `eslint.config.js` é resquício do template e o ESLint **não** está entre as dependências instaladas — não há como executar lint sem antes adicioná-lo.
 
-### `package.json`
-- Adicionado **apenas** o script `"typecheck": "tsc -p tsconfig.app.json --noEmit"` para conferir tipos sem build. O `build` não foi modificado. Nenhuma dependência entra ou sai.
+## Configuração do ambiente
 
-### `src/index.css` (fundação visual)
-- Criadas dentro de `@layer components` três classes que **eram usadas em quase todas as telas mas não existiam**:
-  - `.card-base` — cartão branco arredondado com borda e sombra;
-  - `.btn-secondary` — botão branco com borda;
-  - `.btn-blush` — botão rosa.
-- Elas foram definidas de forma **neutra** (sem tamanhos fixos) para que classes utilitárias já usadas nas páginas (`p-4`, `bg-charcoal`, `-mx-6 -mt-6` etc.) continuem sobrescrevendo normalmente. Antes disso, as telas apareciam "sem fundo, borda e padding".
+O projeto usa apenas **variáveis públicas** do cliente (o Vite embute no bundle tudo que começa com `VITE_`). O arquivo `.env.example` na raiz documenta os nomes:
 
-### `src/App.tsx` (rotas e shell)
-- Adicionada a rota da página pública: `/e/:slug` → `PublicEventPage`.
-- Adicionada rota curinga `*` → redireciona para `/` (antes, acessar uma rota inexistente quebrava).
-- Criado um componente interno `AppShell` que usa `useLocation()`: quando o caminho começa com `/e/`, ele **não renderiza** `Navbar`, `Footer` nem `AIAssistant` — a página pública fica limpa e dedicada. O `Router` passou a envolver esse shell.
+```bash
+# .env.example (somente placeholders — copie para .env.local)
+VITE_SUPABASE_URL=https://SEU-PROJETO.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=cole-aqui-a-publishable-key-do-projeto
+```
 
-### `src/components/Footer.tsx`
-- O link "Lista de Presentes" apontava para `/presentes`, **rota que não existe**. Passou para `/dashboard`.
+**Como utilizar:**
 
-### `src/lib/eventUtils.ts` (novo — funções puras e tipadas)
-- `slugify(texto)` — minúsculas, sem acentos, não-alfanuméricos viram `-` (gera o endereço do evento).
-- `normalizeName(texto)` — normaliza nomes (trim, minúsculas, sem acentos, espaços colapsados) para **comparar nomes de convidados** com ou sem formatação.
-- `safeHex(valor, fallback)` — só aceita `#RRGGBB` válido, senão devolve um padrão (evita UI quebrada com cor inválida).
-- `getCountdown(data, hora, agora)` — devolve `{status: 'future'|'today'|'past', days, hours, minutes}` calculando a diferença até o evento.
-- `timeAgo(iso)` — "agora há pouco", "há X min", "há X h" ou a data `dd/mm`.
-- `formatBRL(n)` — formata em reais com centavos ("R$ 1.299,90").
-- `parsePrice(entrada)` — entende "1.299,90", "1299,9", "1299.90", "R$ ..." corretamente (o `parseFloat` antigo transformava "1.299,90" em 1.299).
-- `copyText(texto)` — copia para a área de transferência com `navigator.clipboard` e fallback por `textarea` + `execCommand`.
-- `compressImage(arquivo)` — redimensiona (máx. 1280px) e comprime para JPEG via `canvas`, rejeita arquivos > 8 MB e reduz qualidade/tamanho até caber em ~500 KB (usado no upload de capa).
-- `eventTypeMeta` — mapa de tipo de evento → emoji/rótulo, usado só nos arquivos novos.
+1. Crie `.env.local` a partir do exemplo: `cp .env.example .env.local` — o `.gitignore` ignora `.env*`, exceto o exemplo, então valores reais nunca entram no Git.
+2. Preencha os dois valores com os dados do seu projeto Supabase (*Settings → API*: Project URL e publishable key).
+3. Reinicie `npm run dev` após alterar variáveis (o Vite só lê arquivos `.env` na inicialização).
 
-### `src/store/useStore.ts` (estado central)
-- `Event` ganhou `published: boolean`, `slug: string` e `publishedAt?: string`.
-- `Guest` ganhou `respondedAt?: string` e `respondedVia?: 'host' | 'public'` (para saber **quando** e **por onde** a resposta veio).
-- `createEvent` agora inicializa `published: false, slug: ''` — quem cria o evento não precisa mudar nada.
-- `persist` ganhou `version: 1` e uma função `migrate` que preenche os campos novos de eventos antigos (sem usar `any`, com cast controlado a partir de `unknown`) — assim dados salvos antes da alteração continuam abrindo.
-- Adicionado um listener do evento `storage`: quando **outra aba** grava `festsao-storage`, esta aba chama `rehydrate()` e a interface se atualiza **sem recarregar** — essencial para a demonstração em duas abas.
+**Regras de segurança (documentadas no próprio `.env.example`):**
 
-### `src/pages/LandingPage.tsx`
-- Substituídas as cores `coral`, `coral-dark` e `peach`, que **não existiam** no `tailwind.config.js` (o CTA principal ficava invisível), pelas cores reais do tema: `rose`, `rose-dark` e `blush-light/50`. O `tailwind.config.js` **não** foi alterado.
+- A publishable key (`sb_publishable_*`) é pública por natureza e segura no frontend desde que as políticas RLS estejam aplicadas.
+- Chaves secretas (`sb_secret_*` / `service_role`) **nunca** devem aparecer no `.env`, no Git ou em qualquer variável `VITE_*`.
+- Sem as duas variáveis, o app exibe um aviso no console e opera no modo demo (`localStorage`), sem autenticação funcional nem dados remotos.
 
-### `src/pages/CreateEventPage.tsx`
-- `Event['type']` (que resolvia para o `Event` global do DOM) virou `EventModel['type']` via `import type { Event as EventModel }`.
-- `steps.map((s, i))` → `steps.map((_, i))` e remoção de imports não usados (`FileText`, `Users`, `ArrowRight`, `Star`) para deixar o typecheck limpo.
-- Responsividade: conectores do progresso `w-6 sm:w-12`; grids de data/hora, local/cidade e do resumo passaram a `grid-cols-1 sm:grid-cols-2`.
+**Configurações externas necessárias** (guia completo em `docs/supabase-setup.md`):
 
-### `src/pages/PersonalizationPage.tsx` (o coração da publicação)
-- **Removidos** o estado `saved` e o botão fake "Salvar alterações" (que só piscava "Salvo!" sem fazer nada — as mudanças já eram salvas ao digitar).
-- No lugar do botão: se não publicado → botão **"Publicar página"**; se publicado → link **"Abrir página"** (nova aba). Abaixo do título, o texto "As alterações são salvas automaticamente".
-- **Publicar** gera o slug só na primeira vez (`slugify(nome)` + 4 caracteres aleatórios, verificando unicidade) e grava `published/slug/publishedAt` via `updateEvent`.
-- **Novo card "Publicação"**: status (Publicada/Rascunho), campo readonly com a URL completa + botão "Copiar link" (feedback "Copiado!" ou "Selecione e copie") e botão "Despublicar" (mantém o slug, então o **mesmo link volta a funcionar**).
-- **Novo card "Informações do evento"**: nome, organizadores, data, horário, local, cidade e mensagem, controlados por `event` e gravados via `updateEvent`.
-- **Novo card "Capa"**: campo de URL, botão "Enviar imagem" (arquivo comprimido via `compressImage` e salvo como data URL), botão "Remover capa" e mensagens de erro.
-- **Cores**: os campos de texto hex agora usam um rascunho local (`draft`) e só gravam na store se o valor for um hex válido (`ring-rose` avisa quando está inválido); o rascunho se sincroniza quando a cor muda por preset/seletor. Todos os usos de `cor + '15'/'25'` passam por `safeHex`.
-- **Preview** agora usa a capa real, a contagem regressiva real (com `setInterval` de 30s e cleanup), o nome do evento, os organizadores e a tagline — e o `sticky` só vale em telas `lg`.
+- Aplicar as 4 migrations em ordem no SQL Editor do Supabase (ou via Supabase CLI: `supabase link --project-ref <ref>` + `supabase db push`).
+- Auth → Providers → Email habilitado com **Confirm email** ON.
+- Auth → URL Configuration: Site URL e Redirect URLs incluindo `http://localhost:5173/**` e o domínio de produção (o app usa `window.location.origin` como retorno de confirmação/recuperação de senha).
 
-### `src/pages/PublicEventPage.tsx` (novo)
-- Busca o evento por `slug` **e** `published`. Se não achar, mostra mensagem amigável explicando que a página pode não estar publicada ou ter sido aberta em outro navegador, com link para `/`.
-- Quando encontra, exibe: hero com capa (imagem absoluta + overlay da cor primária, com `onError` que esconde se a capa falhar), tipo/emoji, organizadores, nome, tagline entre aspas, contagem regressiva (caixas dias/horas/min, "É hoje! 🎉" ou "Evento realizado"), data por extenso, horário, local, **"Ver no mapa"** (Google Maps), mensagem para os convidados, contagem de convidados (N · M confirmados), **lista de presentes somente leitura** (nome, categoria, melhor preço em `formatBRL`, link da loja só se for `http(s)`, selo "Já presenteado" — sem expor `receivedBy`), e rodapé "Criado com Festão".
-- Cores vêm de `primaryColor`/`secondaryColor` via `style`, com `safeHex` como proteção.
-- **Card "Confirme sua presença"** (quando `showRsvp` está ligado): botões "Vou com certeza" / "Não poderei ir", nome obrigatório, e-mail/telefone opcionais, checkbox de acompanhante + nome, observações e erros no padrão `text-rose text-xs`. Ao enviar: procura o convidado por `normalizeName` — se existir, **atualiza**; se não, **cria** — sempre gravando `respondedAt` e `respondedVia: 'public'`. Depois mostra tela de sucesso ("Presença confirmada! Obrigado, {primeiro nome}." ou mensagem gentil de recusa) com botão **"Alterar resposta"**.
-- **A página pública nunca exibe nomes, e-mails ou telefones da lista de convidados** — apenas a contagem agregada.
+## Banco de dados e integrações
 
-### `src/pages/GiftListPage.tsx`
-- Preços agora usam `parsePrice` na entrada (descartando preços inválidos ou ≤ 0) e `formatBRL` na saída. O `parseFloat` que quebrava "1.299,90" e os `toFixed`/`toLocaleString` sem centavos foram removidos.
-- Modal de presente com `p-5 sm:p-8`; modal de "recebido" ganhou `max-h-[90vh] overflow-y-auto`.
+### Supabase (modo remoto)
 
-### `src/pages/ServicesPage.tsx`
-- **Nenhuma mudança de lógica.** O filtro de categorias já havia sido corrigido em um commit anterior (`categoryIdByLabel`). Só removido o import `Filter` não usado. Os mocks **não** foram alterados.
+Quando `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` estão definidas, a aplicação usa o Supabase como backend:
 
-### `src/pages/GuestsPage.tsx`
-- O `<select>` de RSVP do anfitrião agora grava também `respondedAt` e `respondedVia: 'host'`.
-- Linha do convidado: selo discreto **"via página"** quando `respondedVia === 'public'` e exibição das `notes` em texto pequeno (ambos no mesmo estilo dos selos já existentes).
-- Responsividade: linha quebra em telas pequenas (`flex-wrap sm:flex-nowrap`), contato com `flex-wrap`, select + ações em segunda linha (`w-full sm:w-auto`), filtros com `overflow-x-auto`, 5º card de estatística com `col-span-2 sm:col-span-1`, modais com padding responsivo e `max-h`.
-- Removidos imports/variáveis não usados (`Filter`, `Download`, `UserCheck`, `UserX`, `ChevronDown`, `RsvpIcon`, o mapa `rsvpIcons` etc.).
+- **Tabelas** (criadas em `supabase/migrations/20261011180000_init.sql`): `profiles`, `events`, `event_personalization`, `guests`, `gifts`, `gift_options` e `rsvp_log`.
+- **Row Level Security** (`20261011190000_rls.sql`): RLS habilitado em todas as tabelas; o dono só acessa os próprios eventos; o anônimo só lê as **views** de eventos publicados (sem PII) e escreve RSVP através da função `submit_rsvp`.
+- **RSVP público** (`20261012083000_rsvp.sql`): função `security definer` com validações, upsert por nome normalizado e rate limit de 10 envios por IP/hora.
+- **Storage** (`20261012103000_storage.sql`): bucket público `covers` (leitura por URL, escrita restrita ao dono, limite de 5 MB, formatos jpg/png/webp) para as capas dos eventos.
+- **Camada de aplicação**: `src/lib/supabase.ts` (cliente), `src/lib/api/eventsApi.ts` (CRUD do dono), `src/lib/api/publicApi.ts` (leitura pública por slug + RPC de RSVP) e `src/lib/api/coverStorage.ts` (upload/remoção de capas).
 
-### `src/pages/DashboardPage.tsx`
-- **Sem id:** se já há eventos, mostra "Seus eventos" + "Escolha um evento para abrir o painel."; se não, mantém o "Bem-vindo ao Festão!".
-- **Contagem:** trocado o cálculo manual `daysLeft` por `getCountdown` — o card agora aparece nos estados futuro ("Faltam X dias"), "É hoje! 🎉", "Evento realizado" e "Defina a data" (nunca some).
-- **Atividade recente:** itens ordenados por `respondedAt` (mais recente primeiro), com textos diferentes para "confirmou presença pela página" (público) vs "foi marcado como confirmado" (anfitrião), mantendo recusa/pendente; o horário usa `timeAgo` e **some** quando não há horário (acabou o "Recente" fixo).
-- **Card "Enviar atualização"** (botão sem `onClick`) substituído por **"Página do evento"**: se publicada, "Sua página está no ar." + "Copiar link" (com feedback) + "Abrir página"; se não, "Sua página ainda não foi publicada." + link "Publicar página" para a personalização.
-- Atalho "Personalizar página" agora mostra **"Publicada"** ou **"Rascunho"**.
-- Variável morta `totalGifts` removida; linha de data/local com `flex-wrap`.
+### Modo demo (sem variáveis)
 
-### `src/pages/ProfessionalProfilePage.tsx`
-- Apenas removido o import `ExternalLink` não usado (para o typecheck fechar). Conteúdo de mock intacto.
+- Persistência local via Zustand `persist` na chave `festsao-storage` do `localStorage`, com sincronização entre abas (listener do evento `storage`).
+- Limitação aceita: a página pública só enxerga os dados do mesmo navegador/perfil.
+- A capa fica como data URL no próprio `localStorage`.
 
----
+> **Importante:** as migrations foram versionadas no repositório, mas, segundo `docs/supabase-setup.md` e `docs/relatorio-final-fase-6.md`, ainda **não foram aplicadas em um projeto Supabase real** — a validação de RLS, autenticação e RSVP entre dispositivos está pendente. Não há outro serviço externo, API de terceiros ou webhook integrado.
 
-## 4. Novas funcionalidades ou correções
+## Limitações e próximos passos
 
-**Novas funcionalidades**
-1. **Publicação de página** — botão Publicar, geração de slug único, link copiável, abrir em nova aba e despublicar/republicar mantendo o mesmo link.
-2. **Página pública do evento** em `/e/<slug>` — visual com cores, capa, contagem, mapa, presentes e rodapé.
-3. **Confirmação de presença (RSVP) pelo convidado** — formulário completo com validação, tela de sucesso e "Alterar resposta"; atualiza convidado existente (sem duplicar, mesmo com nome em caixa diferente/acentuada) ou cria um novo.
-4. **Rastreamento da origem da resposta** — `respondedAt` + `respondedVia` ('host' | 'public'), com selo "via página" e atividade datada.
-5. **Sincronização entre abas** — listener de `storage` + `rehydrate()` atualiza dashboard/página pública em tempo real.
-6. **Upload/capçaha de imagem** — compressão e redimensionamento no navegador via canvas.
-7. **Cartões de informação e capa** na personalização, com preview fiel ao resultado real.
-8. **Migração de dados antigos** (`version: 1`) para eventos criados antes das mudanças.
+**Limitações atuais (verificadas na análise do código):**
 
-**Correções**
-- Estilos ausentes (`.card-base`, `.btn-secondary`, `.btn-blush`) — telas sem aparência de cartão/botão.
-- Cores inexistentes na landing (`coral`/`peach`) — CTA invisível.
-- Typecheck de 26 erros → **0**; `npm run typecheck` agora existe.
-- Rota quebrada `/presentes` no rodapé e ausência de rota `*`.
-- Preço "1.299,90" virando 1.299 e formatação sem centavos/milhar.
-- Dashboard dizendo "Você ainda não criou nenhum evento" mesmo com eventos; card de contagem que sumia no/after do evento; atividade com "Recente" fixo; botão "Enviar mensagem" morto.
-- Personalização com botão de salvar inerte, preview com contagem fixa 47/8/23 e sem UI de capa.
-- Diversos problemas de responsividade (320–1280px).
+- **Validação em ambiente real pendente:** migrations, políticas RLS, confirmação de e-mail, RSVP entre dois dispositivos e upload de capas ainda não foram testados em um projeto Supabase real (conforme `docs/supabase-setup.md`); o deploy na Vercel também não foi executado (`docs/deploy-vercel.md`).
+- **Bundle grande:** `npm run build` emite o aviso `Some chunks are larger than 500 kB` (≈751 kB minificado / ≈210 kB gzip), puxado por `framer-motion`, `@supabase/supabase-js` e `zod`. Code-split não foi feito.
+- **Modo demo restrito ao navegador:** sem Supabase, os dados (inclusive a página pública `/e/<slug>`) só existem no navegador que os criou.
+- **Conteúdo demonstrativo:** serviços, perfil de profissionais e assistente usam dados/respostas fixos — não são integrações reais.
+- **Testes de integração ausentes:** a suíte cobre apenas funções puras, a store em modo demo e o guarda de rotas; não há testes contra o Supabase nem pipeline de CI.
+- **Dependências ociosas:** várias dependências declaradas no `package.json` não são importadas em `src/` (ver [Tecnologias utilizadas](#tecnologias-utilizadas)).
+- **Sem script de lint:** o ESLint não está instalado, apesar do `eslint.config.js` existir.
 
----
+**Sugestões de melhoria (não são funcionalidades existentes):**
 
-## 5. Como ficou o funcionamento após as alterações
+- Aplicar as migrations num projeto Supabase de teste e seguir os checklists de `docs/supabase-setup.md`.
+- Concluir o deploy na Vercel conforme `docs/deploy-vercel.md` e executar o smoke test pós-deploy.
+- Adicionar code-split (lazy loading das rotas) para reduzir o bundle inicial.
+- Remover ou justificar as dependências não usadas e habilitar ESLint com um script `npm run lint`.
+- Implementar, se o produto evoluir, as funcionalidades hoje apenas citadas pelo assistente (orçamento, links de convite individuais).
 
-O cenário completo funciona assim, de ponta a ponta:
+## Contribuição
 
-1. **Criar evento** (4 etapas, com validações intactas) → salva com `published: false` e `slug: ''`.
-2. **Cadastrar convidados** — edição, remoção, adição em lote e filtro por RSVP continuam iguais, agora com selo/observações extras.
-3. **Cadastrar presentes** — preço digitado em qualquer formato brasileiro aparece "R$ 1.299,90" no item e nos totais.
-4. **Personalizar** — nome, cores, capa, frase, toggles e informações mudam **o preview na hora**; tudo persiste automaticamente.
-5. **Publicar página** → gera `/e/<slug>`, mostra link copiável; "Abrir página" abre em nova aba **sem Navbar/Footer/Assistente**.
-6. **Na página pública**, o convidado responde (ex.: "maria silva" minúsculo atualiza a "Maria Silva" existente; "Carlos Novo" cria um novo) → sucesso com opção de alterar.
-7. **Voltando ao dashboard em outra aba**, sem recarregar: "Confirmados" sobe, a barra de RSVP muda e a atividade mostra "…confirmou presença pela página — há X min".
-8. **Despublicar** faz a página mostrar "não está disponível"; **publicar de novo** reativa o **mesmo link**.
-9. Acessar qualquer rota inexistente redireciona para a home.
+Contribuições são bem-vindas! Fluxo básico:
 
-**Dependências entre alterações:** as mudanças se encadeiam — os estilos do Passo 1 são pré-requisito para as telas ficarem visíveis; os campos novos da store + `migrate` + listener de `storage` sustentam publicação, RSVP e sincronização; `eventUtils` é consumido pela personalização, página pública e dashboard; e os campos `respondedAt`/`respondedVia` são o que conecta o RSVP público ao selo e à atividade do painel.
+1. Faça um fork do repositório e crie uma branch para a mudança (`git checkout -b feat/minha-melhoria`).
+2. Mantenha o padrão do projeto: TypeScript, componentes funcionais, Tailwind para estilos e Zustand para estado.
+3. Antes de abrir o Pull Request, valide localmente:
+   ```bash
+   npm run typecheck
+   npm test
+   npm run build
+   ```
+4. Descreva claramente o que a mudança faz e como foi testada.
+5. Não commite arquivos `.env*` preenchidos, chaves ou credenciais.
 
----
+## Documentação útil
 
-## 6. Observações importantes
+- `docs/supabase-setup.md` — guia passo a passo do Supabase, checklists de aceitação e limitações conhecidas.
+- `docs/deploy-vercel.md` — roteiro de deploy, variáveis de ambiente na Vercel e smoke test.
+- `docs/relatorio-final-fase-6.md` — relatório da infraestrutura Supabase (escopo, arquivos e pendências).
 
-- **Nada do que já funcionava foi reescrito.** As 4 etapas de criação, CRUD de convidados e de presentes, os filtros, os mocks de `ProfessionalProfilePage`/`ServicesPage`, o `AIAssistant` e a identidade visual (paleta, tipografia, layout, componentes, animação `fadeUp`) foram **mantidos** — só houve acréscimo e correção pontual. As actions da store existentes (`updateEvent`, `addGuest`, `updateGuest`, `updatePersonalization` etc.) foram **reutilizadas**, sem criar novas.
-- **Persistência:** apenas `localStorage` na chave `festsao-storage` (nunca alterada). Consequência aceita: **a página pública só enxerga os dados do mesmo navegador/perfil** — outra aba funciona (por causa do listener de `storage`), outro dispositivo não.
-- **Hospedagem:** em servidor estático será preciso configurar *fallback de SPA* para abrir `/e/<slug>` direto; o dev server do Vite já cuida disso em desenvolvimento.
-- **Escopo 100% frontend:** sem backend, banco, API, auth, e-mail ou upload para servidor; as imagens de capa ficam como data URL no próprio `localStorage`.
-- **Mantidos como estão (fora do escopo):** as 11 dependências não usadas no `package.json`, o `npm audit` não tratado, e os mocks de serviços/perfil/assistente.
-- **Validação:** `npm run typecheck` com **0 erros** e `npm run build` **OK**; funções utilitárias e a migração da store testadas por harness compilado em Node; dev server verificado respondendo HTTP 200; grep confirma ausência de `console.log`, `any`, `@ts-ignore` e `eslint-disable` no código.
-- **Limite de validação visual:** sem ferramenta de navegador no ambiente, a checagem em 320–1280px foi por leitura de classes e build — recomenda-se um passe manual rápido (ex.: `document.documentElement.scrollWidth <= window.innerWidth` no console).
-- **Divergência registrada:** o filtro do `ServicesPage` já estava corregido em commit anterior — foi mantido como estava, sem refatoração.
-- **Git:** 7 commits (um por passo, revertíveis) + 2 pushes — `origin` (repositório original) segue inalterado e o remote `camile` aponta para `https://github.com/camilev07/festao`, onde a `main` está atualizada em `fd310d5`.
