@@ -166,7 +166,8 @@ VITE_SUPABASE_PUBLISHABLE_KEY=cole-aqui-a-publishable-key-do-projeto
 
 - A publishable key (`sb_publishable_*`) é pública por natureza e segura no frontend desde que as políticas RLS estejam aplicadas.
 - Chaves secretas (`sb_secret_*` / `service_role`) **nunca** devem aparecer no `.env`, no Git ou em qualquer variável `VITE_*`.
-- Sem as duas variáveis, o app exibe um aviso no console e opera no modo demo (`localStorage`), sem autenticação funcional nem dados remotos.
+- Sem as duas variáveis, o app exibe um aviso no console e opera no modo demo (`localStorage`), com cadastro e login locais, mas sem dados remotos. A conta pronta é `demo@festao.com` com senha `Festao123!`.
+- No modo demo, contas, senhas e eventos ficam somente neste navegador e não devem ser usados com dados sensíveis. Para autenticação real e sincronização entre dispositivos, configure o Supabase.
 
 **Configurações externas necessárias** (guia completo em `docs/supabase-setup.md`):
 
@@ -189,6 +190,8 @@ Quando `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` estão definidas, a
 ### Modo demo (sem variáveis)
 
 - Persistência local via Zustand `persist` na chave `festsao-storage` do `localStorage`, com sincronização entre abas (listener do evento `storage`).
+- Cadastro e autenticação locais via `localStorage`; o cadastro entra imediatamente, sem confirmação de e-mail. Não é um mecanismo de autenticação seguro para produção.
+- Acesso pronto para demonstração: `demo@festao.com` / `Festao123!`.
 - Limitação aceita: a página pública só enxerga os dados do mesmo navegador/perfil.
 - A capa fica como data URL no próprio `localStorage`.
 

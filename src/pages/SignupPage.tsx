@@ -3,9 +3,10 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Sparkles, MailCheck } from 'lucide-react';
 import { z } from 'zod';
-import { supabase } from '../lib/supabase';
 import { authErrorMessage } from '../lib/authErrors';
+import { isSupabaseConfigured, supabase } from '../lib/supabase';
 import { safeNextPath } from '../components/RequireAuth';
+import { useAuth } from '../store/useAuth';
 
 // Validação com zod (dependência existente no projeto, antes não usada).
 const signupSchema = z.object({
@@ -30,6 +31,7 @@ export default function SignupPage() {
   // K2: confirmação de e-mail ON — após signUp mostramos a tela de confirmação.
   const [confirmationSent, setConfirmationSent] = useState(false);
   const [resendState, setResendState] = useState<'idle' | 'sent' | 'error'>('idle');
+  const signUp = useAuth((state) => state.signUp);
 
   const nextPath = safeNextPath(searchParams.get('next'));
 
@@ -45,25 +47,18 @@ export default function SignupPage() {
 
     setLoading(true);
     try {
-      const { data, error: err } = await supabase.auth.signUp({
-        email: parsed.data.email,
-        password: parsed.data.password,
-        options: {
-          data: { display_name: parsed.data.name },
-          emailRedirectTo: redirectTo('/'),
-        },
-      });
-      if (err) {
-        setError(authErrorMessage(err));
+      const result = await signUp(parsed.data.name, parsed.data.email, parsed.data.password);
+      if (result.error) {
+        setError(authErrorMessage(result.error));
         return;
       }
-      // Com confirmação ON, data.session é null até o clique no link do e-mail.
-      // Com confirmação OFF, o Supabase já devolve sessão — segue direto.
-      if (data.session) {
+      if (!result.needsConfirmation) {
         window.location.assign(nextPath);
         return;
       }
       setConfirmationSent(true);
+    } catch (err) {
+      setError(authErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -71,6 +66,10 @@ export default function SignupPage() {
 
   const handleResend = async () => {
     setResendState('idle');
+    if (!isSupabaseConfigured()) {
+      setResendState('error');
+      return;
+    }
     const { error: err } = await supabase.auth.resend({
       type: 'signup',
       email: email.trim(),
@@ -159,6 +158,10 @@ export default function SignupPage() {
               {loading ? 'Criando conta…' : 'Criar conta'}
             </button>
           </form>
+
+          <p className="mt-4 text-center text-xs text-charcoal-light">
+            Sem Supabase configurado, a conta será salva apenas neste navegador e ficará ativa imediatamente.
+          </p>
 
           <p className="mt-6 text-center text-xs text-charcoal-light">
             Já tem conta?{' '}

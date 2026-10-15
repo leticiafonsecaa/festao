@@ -9,13 +9,17 @@ export function authErrorMessage(error: unknown): string {
 
   const lower = message.toLowerCase();
 
-  if (lower.includes('invalid login credentials')) {
+  if (lower.includes('invalid login credentials') || lower.includes('e-mail ou senha inválidos')) {
     return 'E-mail ou senha inválidos. Verifique os dados e tente novamente.';
   }
-  if (lower.includes('email not confirmed')) {
+  if (lower.includes('email not confirmed') || lower.includes('confirme seu e-mail antes')) {
     return 'Confirme seu e-mail antes de entrar. Caixa de entrada e spam.';
   }
-  if (lower.includes('already registered') || lower.includes('already been registered')) {
+  if (
+    lower.includes('already registered') ||
+    lower.includes('already been registered') ||
+    lower.includes('já existe uma conta')
+  ) {
     return 'Já existe uma conta com este e-mail. Use "Entrar" ou recupere a senha.';
   }
   if (lower.includes('password should be') || lower.includes('password')) {

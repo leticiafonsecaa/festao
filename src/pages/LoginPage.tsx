@@ -2,9 +2,9 @@ import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
-import { supabase } from '../lib/supabase';
 import { authErrorMessage } from '../lib/authErrors';
 import { safeNextPath } from '../components/RequireAuth';
+import { DEMO_ACCOUNT, useAuth } from '../store/useAuth';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -13,26 +13,21 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const signIn = useAuth((state) => state.signIn);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
     try {
-      const { data, error: err } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
-      if (err) {
-        setError(authErrorMessage(err));
-        return;
-      }
-      if (!data.session) {
-        // Confirmação de e-mail ativa (K2): sem sessão até confirmar.
-        setError('Confirme seu e-mail antes de entrar. Verifique a caixa de entrada e o spam.');
+      const result = await signIn(email, password);
+      if (result.error) {
+        setError(authErrorMessage(result.error));
         return;
       }
       navigate(safeNextPath(searchParams.get('next')), { replace: true });
+    } catch (err) {
+      setError(authErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -97,6 +92,13 @@ export default function LoginPage() {
               {loading ? 'Entrando…' : 'Entrar'}
             </button>
           </form>
+
+          <aside className="mt-5 rounded-xl bg-blush/15 p-4 text-xs text-charcoal-light">
+            <p className="font-semibold text-charcoal">Acesso de demonstração</p>
+            <p className="mt-1">E-mail: {DEMO_ACCOUNT.email}</p>
+            <p>Senha: {DEMO_ACCOUNT.password}</p>
+            <p className="mt-2">Sem Supabase configurado, contas e dados ficam apenas neste navegador.</p>
+          </aside>
 
           <div className="mt-6 text-center space-y-2">
             <Link to="/esqueci-senha" className="block text-xs text-charcoal-light hover:text-charcoal transition-colors">
